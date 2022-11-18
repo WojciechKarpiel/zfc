@@ -31,13 +31,13 @@ public class ZFC {
                                         eql(a, b))));
     }
 
-    public static final Formula PUSTY;
+    public static final Exists PUSTY()
 
-    static {
+     {
 
         var x = new Variable.Local("x");
         var y = new Variable.Local("y");
-        PUSTY = exists(x, forall(y, new Not(in(y, x))));
+        return  exists(x, forall(y, new Not(in(y, x))));
     }
 
     public static Formula PODZBIOROW(Constant fi) {

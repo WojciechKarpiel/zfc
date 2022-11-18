@@ -1,6 +1,7 @@
 package ast;
 
 import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
 
 public sealed interface Formula permits Formula.And, Formula.AppliedConstant, Formula.Constant, Formula.Equals, Formula.Exists, Formula.ForAll, Formula.Implies, Formula.In, Formula.Not, Formula.Or, Variable {
@@ -28,7 +29,7 @@ public sealed interface Formula permits Formula.And, Formula.AppliedConstant, Fo
     record Exists(Variable var, Formula f) implements Formula {
     }
 
-    static Formula exists(Variable var, Formula f) {
+    static Exists exists(Variable var, Formula f) {
         return new Exists(var, f);
     }
 
@@ -98,13 +99,26 @@ public sealed interface Formula permits Formula.And, Formula.AppliedConstant, Fo
         return new And(new Implies(a, b), new Implies(b, a));
     }
 
+    // TODO free var check
+    default Set<Variable> FreeVarialbes(){
+        return Set.of();
+    }
     default boolean equalsF(Formula other) {
         return switch (this) {
 
-            case And and -> other instanceof And && and.a.equalsF((And) other) && and.b.equalsF(((And) other).b());
+            case And and -> {
+
+                 var r= other instanceof And && and.a.equalsF( ((And) other).a()) && and.b.equalsF(((And) other).b());
+            if (!r) {
+                System.out.println("co jes");
+            }
+            yield r;
+            }
             case ForAll forAll -> {
                 if (other instanceof ForAll ofa) {
-                    yield new Subst(forAll.var(), ofa.var()).apply(forAll.f()).equalsF(ofa.f());
+                    Formula apply = new Subst(forAll.var(), ofa.var()).apply(forAll.f());
+                    Formula f = ofa.f();
+                    yield apply.equalsF(f);
                 } else {
                     yield false;
                 }
@@ -124,8 +138,18 @@ public sealed interface Formula permits Formula.And, Formula.AppliedConstant, Fo
                     costant.equals(other);
             case Equals equals -> throw new UnimplementedException();
             case Exists exists -> throw new UnimplementedException();
-            case Implies implies -> throw new UnimplementedException();
-            case In in -> throw new UnimplementedException();
+            case Implies implies -> {
+                if (other instanceof  Implies o){
+                  yield   implies.poprzednik().equalsF(o.poprzednik())  && implies.nastepnik.equalsF(o.nastepnik());
+                }else  yield false;
+            }
+            case In in -> {
+                if (other instanceof In o) {
+                    var a = in.element().equalsF(o.element());
+                    var b= in.set.equalsF(o.set);
+                    yield a &&b;
+                } else yield false;
+            }
             case Not not -> throw new UnimplementedException();
             case Or or -> throw new UnimplementedException();
             case Variable v -> other instanceof Variable && v.equals(other);

@@ -36,7 +36,8 @@ public sealed interface Variable extends Formula, Ast permits  Variable.Local {
 
         @Override
         public String toString() {
-            return getName();
+            return
+                    getName() + (hashCode()%100);
         }
     }
     static Local local(String name){
