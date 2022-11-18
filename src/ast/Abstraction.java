@@ -1,4 +1,4 @@
 package ast;
 
-public record Abstraction(Variable argName, Ast argType, Ast body) {
+public record Abstraction(Variable argName, Ast body) {
 }

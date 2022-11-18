@@ -1,27 +1,19 @@
 package ast;
-sealed public interface Ast permits Ast.App, Ast.Hole, Ast.Lambda, Ast.Pi, Ast.Universe, Variable {
 
-    record Hole() implements Ast {
-    }
-    record Universe(int i) implements Ast {
-    }
 
-    record Lambda(Abstraction abs) implements Ast {
-    }
+// TODO + metadata i wtedy `equals` inne i hashcode
+sealed public interface Ast permits Ast.Apply, Ast.Chain, Ast.ElimAnd, Ast.ExtractWitness, Ast.FormulaX, Ast.ModusPonens, Variable {
+    record Apply(Ast fn, Ast arg) implements Ast{}
+    record ExtractWitness(Ast sigma,  Variable witness, Variable proof,  Ast body  ) implements Ast{}
+    record ModusPonens(Ast wynikanie,  Ast poprzednik, Variable witness,  Ast body  ) implements Ast{}
 
-    record Pi(Abstraction abs) implements Ast {
-    }
-    record App(Ast fn, Ast arg) implements Ast{}
-    /*
-    sigmy itd w kontekście?
-    posty i jednostkowy zapewne tak
-     */
+    // użytkownikowi wolno tylko aksjomaty tu wprowadzać
+    record FormulaX(Formula f) implements Ast{}
 
-//    record Empty() implements Ast{}
-    // EmptyElim w kontekście, a nie w AST?
+    record ElimAnd(Ast and, Variable a, Variable b, Ast body) implements Ast    {}
 
-//     record Unit() implements Ast{}
-//    record Tt() implements Ast{
-//    }
+    record Chain(Variable v, Ast e, Ast rest) implements  Ast{}
 
-}
+//    record NamedVarUnsafe(String s) implements Ast{}
+//    record DefConstant
+ }

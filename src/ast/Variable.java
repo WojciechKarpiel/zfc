@@ -1,6 +1,6 @@
 package ast;
 
-public sealed interface Variable extends Ast, Formula permits  Variable.Local {
+public sealed interface Variable extends Formula, Ast permits  Variable.Local {
 //        record Bruijn(int i) implements Variable {}
 
 //    record NamedVar(String name) implements Variable {

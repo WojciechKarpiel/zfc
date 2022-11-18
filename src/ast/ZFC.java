@@ -2,10 +2,7 @@ package ast;
 
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.function.Function;
-import java.util.stream.StreamSupport;
 
 import static ast.Formula.*;
 
@@ -43,8 +40,8 @@ public class ZFC {
         PUSTY = exists(x, forall(y, new Not(in(y, x))));
     }
 
-    public static Formula PODZBIOROW(Costant fi) {
-        assert fi.arity() >= 2;
+    public static Formula PODZBIOROW(Constant fi) {
+        if (!( fi.arity() >= 2)) throw new RuntimeException(" fi.arity() >= 2");
         int n = fi.arity() - 2;
         var ps = new ArrayList<Variable.Local>(n);
         for (int i = 1; i <= n; i++) {
@@ -62,7 +59,7 @@ public class ZFC {
                 forall(b, exists(a,
                         iff(in(x, a),
                                 new And(in(x, b),
-                                        new AppliedConstant(fi, args)))));
+                                        appliedConstant(fi, args)))));
         for (int i = ps.size() - 1; i >= 0; i--) {
             ret = forall(ps.get(i), ret);
         }
@@ -127,9 +124,9 @@ public class ZFC {
                 )));
     }
 
-    public static Formula ZASTEPOWANIA(Costant Θ/*, Variable X, Variable Y*/) {
+    public static Formula ZASTEPOWANIA(Constant Θ/*, Variable X, Variable Y*/) {
         int n = Θ.arity() - 3;
-        assert n >= 0;
+        if (!( n >= 0)) throw new RuntimeException(" n >= 0");
         var X = Variable.local("X");
         var Y = Variable.local("Y");
         var x = Variable.local("x");
@@ -143,7 +140,7 @@ public class ZFC {
             args.add(q);
             args.add(X);
             args.addAll(ps);
-            return new AppliedConstant(Θ, args);
+            return appliedConstant(Θ, args);
         };
         Formula res = //uwaga "x" w dwóch miejscach
                 forall(x,
