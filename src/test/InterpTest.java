@@ -35,12 +35,12 @@ class InterpTest {
                                         new Ast.IntroForall(jakisZbior,
                                                 new Ast.IntroAnd(
                                                         // Implies[poprzednik=In[element=x77, set=x72], nastepnik=In[element=x77, set=x94]]
-                                                        new Ast.IntroImpl(new Formula.Constant("elo", List.of(), in(jakisZbior, p1)),
-                                                                implX, new Ast.ElimNot(new Ast.Apply(p1P, jakisZbior), implX, new Formula.Constant("hehe", List.of(), in(jakisZbior, p2 /*2!*/)), qq, qq))
+                                                        new Ast.IntroImpl( Formula.constant("elo", List.of(), in(jakisZbior, p1)),
+                                                                implX, new Ast.ElimNot(new Ast.Apply(p1P, jakisZbior), implX,  Formula.constant("hehe", List.of(), in(jakisZbior, p2 /*2!*/)), qq, qq))
                                                         ,
                                                         // tu będzie to samo
-                                                        new Ast.IntroImpl(new Formula.Constant("elo2", List.of(), in(jakisZbior, p2)),
-                                                                implX, new Ast.ElimNot(new Ast.Apply(p2P, jakisZbior), implX, new Formula.Constant("hehe2", List.of(), in(jakisZbior, p1)), qq, qq))
+                                                        new Ast.IntroImpl( Formula.constant("elo2", List.of(), in(jakisZbior, p2)),
+                                                                implX, new Ast.ElimNot(new Ast.Apply(p2P, jakisZbior), implX,  Formula.constant("hehe2", List.of(), in(jakisZbior, p1)), qq, qq))
                                                 )
                                         )
 

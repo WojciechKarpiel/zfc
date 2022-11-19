@@ -8,32 +8,48 @@ import java.util.Set;
 import java.util.function.Function;
 
 public sealed interface Formula permits Formula.And, Formula.AppliedConstant, Formula.Constant, Formula.Equals, Formula.Exists, Formula.ForAll, Formula.Implies, Formula.In, Formula.Not, Formula.Or, Variable {
-    record Or(Formula a, Formula b) implements Formula {
+
+
+    Metadata metadata();
+
+    record Or(Formula a, Formula b, Metadata metadata) implements Formula {
     }
 
     static Or or(Formula a, Formula b) {
-        return new Or(a, b);
+        return or(a, b,Metadata.EMPTY);
+    }
+    static Or or(Formula a, Formula b, Metadata m) {
+        return new Or(a, b,m);
     }
 
-    record And(Formula a, Formula b) implements Formula {
+    record And(Formula a, Formula b, Metadata metadata) implements Formula {
     }
 
     static And and(Formula a, Formula b) {
-        return new And(a, b);
+        return  and(a, b, Metadata.EMPTY);
+    }
+    static And and(Formula a, Formula b, Metadata metadata) {
+        return new And(a, b,metadata);
     }
 
-    record Implies(Formula poprzednik, Formula nastepnik) implements Formula {
+    record Implies(Formula poprzednik, Formula nastepnik, Metadata metadata) implements Formula {
     }
 
     static Implies implies(Formula a, Formula b) {
-        return new Implies(a, b);
+        return implies(a,b, Metadata.EMPTY);
+    }
+    static Implies implies(Formula a, Formula b,Metadata m) {
+        return new Implies(a, b,m);
     }
 
-    record Exists(Variable var, Formula f) implements Formula {
+    record Exists(Variable var, Formula f, Metadata metadata) implements Formula {
     }
 
     static Exists exists(Variable var, Formula f) {
-        return new Exists(var, f);
+        return exists(var,f, Metadata.EMPTY);
+    }
+    static Exists exists(Variable var, Formula f,Metadata m) {
+        return new Exists(var, f,m);
     }
 
     static Formula existsOne(Function<Variable, Formula> varToFormula) {
@@ -42,22 +58,28 @@ public sealed interface Formula permits Formula.And, Formula.AppliedConstant, Fo
         return exists(y, forall(x, iff(varToFormula.apply(x), eql(x, y))));
     }
 
-    record ForAll(Variable var, Formula f) implements Formula {
+    record ForAll(Variable var, Formula f, Metadata metadata) implements Formula {
     }
 
     static Formula forall(Variable var, Formula f) {
-        return new ForAll(var, f);
+        return forall(var, f,Metadata.EMPTY);
+    }
+    static Formula forall(Variable var, Formula f, Metadata m) {
+        return new ForAll(var, f,m);
     }
 
-    record Not(Formula f) implements Formula {
+    record Not(Formula f, Metadata metadata) implements Formula {
     }
 
     static Not not(Formula f) {
-        return new Not(f);
+        return not(f,Metadata.EMPTY);
+    }
+    static Not not(Formula f,Metadata m) {
+        return new Not(f,m);
     }
 
     // Formally, let φ \varphi be any formula in the language of ZFC with all free variables among x , z , w 1 , … , w n {\displaystyle x,z,w_{1},\ldots ,w_{n}} ( y y is not free in φ \varphi ).
-    record Constant(String name, List<Variable> freeVariables, Formula formula) implements Formula {
+    record Constant(String name, List<Variable> freeVariables, Formula formula, Metadata metadata) implements Formula {
         public boolean isAtom() {
             return arity() == 0;
         }
@@ -71,7 +93,14 @@ public sealed interface Formula permits Formula.And, Formula.AppliedConstant, Fo
         }
     }
 
-    record AppliedConstant(Constant fi, List<Formula> args)
+    static Constant constant(String name, List<Variable> freeVariables, Formula formula){
+        return constant(name,freeVariables,formula,Metadata.EMPTY);
+    }
+    static Constant constant(String name, List<Variable> freeVariables, Formula formula, Metadata metadata){
+        return new Constant(name,freeVariables,formula,metadata);
+    }
+
+    record AppliedConstant(Constant fi, List<Formula> args, Metadata metadata)
             implements Formula {
 
         // todo assert fi.arity == args.len
@@ -79,28 +108,40 @@ public sealed interface Formula permits Formula.And, Formula.AppliedConstant, Fo
     }
 
     static AppliedConstant appliedConstant(Constant fi, List<Formula> args) {
+        return appliedConstant(fi,args,Metadata.EMPTY);
+    }
+    static AppliedConstant appliedConstant(Constant fi, List<Formula> args, Metadata m) {
         if (!(fi.freeVariables.size() == args.size()))
             throw new RuntimeException(" fi.freeVariables.size() == args.size()");
-        return new AppliedConstant(fi, args);
+        return new AppliedConstant(fi, args,m);
     }
 
     /////////
-    record In(Formula element, Formula set) implements Formula {
+    record In(Formula element, Formula set, Metadata metadata) implements Formula {
     }
 
     static In in(Formula element, Formula set) {
-        return new In(element, set);
+        return in(element, set, Metadata.EMPTY);
+    }
+    static In in(Formula element, Formula set, Metadata m) {
+        return new In(element, set,m );
     }
 
-    record Equals(Formula a, Formula b) implements Formula {
+    record Equals(Formula a, Formula b, Metadata metadata) implements Formula {
     }
 
     static Equals eql(Formula a, Formula b) {
-        return new Equals(a, b);
+        return eql(a,b,Metadata.EMPTY);
+    }
+    static Equals eql(Formula a, Formula b, Metadata m) {
+        return new Equals(a, b,m);
     }
 
     static Formula iff(Formula a, Formula b) {
-        return new And(new Implies(a, b), new Implies(b, a));
+        return iff(a,b, Metadata.EMPTY);
+    }
+    static Formula iff(Formula a, Formula b, Metadata m ) {
+        return and(implies(a, b,m), implies(b, a,m),m);
     }
 
     default   Set<Variable> findFreeVariables() {

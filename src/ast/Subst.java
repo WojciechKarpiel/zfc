@@ -17,7 +17,7 @@ public record Subst(Map<Variable, Formula> map)  {
             case Formula.AppliedConstant appliedConstant -> appliedConstant;
             case Formula.Constant costant -> {
                 costant.freeVariables().forEach(v -> Common.assertC( !map.containsKey(v)));
-               yield  new Formula.Constant(costant.name(), costant.freeVariables(), apply(costant.formula()));
+               yield   Formula.constant(costant.name(), costant.freeVariables(), apply(costant.formula()));
             }
             case Formula.Equals equals -> Formula.eql(apply(equals.a()),apply(equals.b()));
             case Formula.Exists exists -> Formula.exists(exists.var() /* oby nie zaszło*/,apply(exists.f()));

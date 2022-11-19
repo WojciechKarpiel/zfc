@@ -18,9 +18,9 @@ public class ZFC {
     public static final Formula EXTENSIONALITY;
 
     static {
-        var a = new Variable.Local("a");
-        var b = new Variable.Local("b");
-        var x = new Variable.Local("x");
+        var a = Variable.local("a");
+        var b = Variable.local("b");
+        var x = Variable.local("x");
         EXTENSIONALITY =
                 forall(a,
                         forall(b,
@@ -35,9 +35,9 @@ public class ZFC {
 
      {
 
-        var x = new Variable.Local("x");
-        var y = new Variable.Local("y");
-        return  exists(x, forall(y, new Not(in(y, x))));
+        var x = Variable.local("x");
+        var y = Variable.local("y");
+        return  exists(x, forall(y, not(in(y, x))));
     }
 
     public static Formula PODZBIOROW(Constant fi) {
@@ -45,7 +45,7 @@ public class ZFC {
         int n = fi.arity() - 2;
         var ps = new ArrayList<Variable.Local>(n);
         for (int i = 1; i <= n; i++) {
-            ps.add(new Variable.Local("p" + i));
+            ps.add(Variable.local("p" + i));
         }
         var x = Variable.local("x");
         var a = Variable.local("a");
@@ -58,7 +58,7 @@ public class ZFC {
         var ret =
                 forall(b, exists(a,
                         iff(in(x, a),
-                                new And(in(x, b),
+                                and(in(x, b),
                                         appliedConstant(fi, args)))));
         for (int i = ps.size() - 1; i >= 0; i--) {
             ret = forall(ps.get(i), ret);
@@ -80,7 +80,7 @@ public class ZFC {
                                 exists(c,
                                         forall(x,
                                                 iff(in(x, c),
-                                                        new Or(eql(x, a),
+                                                        or(eql(x, a),
                                                                 eql(x, b)))))));
     }
 

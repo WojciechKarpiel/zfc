@@ -1,6 +1,5 @@
 package parser;
 
-import ast.AnnotatedTree;
 import ast.Ast;
 import ast.Formula;
 import ast.ZFC;
