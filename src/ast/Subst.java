@@ -3,6 +3,7 @@ package ast;
 import util.Common;
 
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public record Subst(Map<Variable, Formula> map)  {
     public Subst(Variable v, Formula f) {
@@ -14,7 +15,10 @@ public record Subst(Map<Variable, Formula> map)  {
             case Variable v -> map().getOrDefault(v, f);
 
             case Formula.And and-> Formula.and(apply(and.a()) , apply(and.b()));
-            case Formula.AppliedConstant appliedConstant -> appliedConstant;
+            case Formula.AppliedConstant appliedConstant ->
+                    Formula.appliedConstant((Formula.Constant) apply(appliedConstant.fi()) ,
+                            appliedConstant.args().stream().map(this::apply).toList()
+                            , appliedConstant.metadata());
             case Formula.Constant costant -> {
                 costant.freeVariables().forEach(v -> Common.assertC( !map.containsKey(v)));
                yield   Formula.constant(costant.name(), costant.freeVariables(), apply(costant.formula()));
@@ -56,12 +60,12 @@ public record Subst(Map<Variable, Formula> map)  {
                 yield new Ast.Chain(chain.v(), apply(chain.e()),apply(chain.rest()));
             }
             case Ast.ElimNot elimNot -> new Ast.ElimNot(apply(elimNot.not()),apply(elimNot.aJednak()),
-                    (Formula.Constant)  apply(    elimNot.cnstChciany()), checkVar(elimNot.v()), apply(elimNot.body()));
+                    (Formula.AppliedConstant)  apply(    elimNot.cnstChciany()), checkVar(elimNot.v()), apply(elimNot.body()));
             case Ast.IntroAnd introAnd -> new Ast.IntroAnd(apply(introAnd.a()),
                     apply(introAnd.b())
             );
             case Ast.IntroForall introForall -> new Ast.IntroForall( checkVar(introForall.v()), apply(introForall.body()));
-            case Ast.IntroImpl introImpl -> new Ast.IntroImpl((Formula.Constant) apply(introImpl.pop()),checkVar(introImpl.v()), apply(introImpl.nast())   );
+            case Ast.IntroImpl introImpl -> new Ast.IntroImpl((Formula.AppliedConstant) apply(introImpl.pop()),checkVar(introImpl.v()), apply(introImpl.nast())   );
         };
     }
 

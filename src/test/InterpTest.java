@@ -35,12 +35,18 @@ class InterpTest {
                                         new Ast.IntroForall(jakisZbior,
                                                 new Ast.IntroAnd(
                                                         // Implies[poprzednik=In[element=x77, set=x72], nastepnik=In[element=x77, set=x94]]
-                                                        new Ast.IntroImpl( Formula.constant("elo", List.of(), in(jakisZbior, p1)),
-                                                                implX, new Ast.ElimNot(new Ast.Apply(p1P, jakisZbior), implX,  Formula.constant("hehe", List.of(), in(jakisZbior, p2 /*2!*/)), qq, qq))
+                                                        new Ast.IntroImpl( Formula.appliedConstant( Formula.constant("elo", List.of(), in(jakisZbior, p1)),List.of()),
+                                                                implX, new Ast.ElimNot(new Ast.Apply(p1P, jakisZbior), implX,
+                                                                Formula.appliedConstant(
+                                                                Formula.constant("hehe", List.of(), in(jakisZbior, p2 /*2!*/)), List.of()) , qq, qq))
                                                         ,
                                                         // tu będzie to samo
-                                                        new Ast.IntroImpl( Formula.constant("elo2", List.of(), in(jakisZbior, p2)),
-                                                                implX, new Ast.ElimNot(new Ast.Apply(p2P, jakisZbior), implX,  Formula.constant("hehe2", List.of(), in(jakisZbior, p1)), qq, qq))
+                                                        new Ast.IntroImpl(Formula.appliedConstant( Formula.constant("elo2", List.of(), in(jakisZbior, p2)),
+                                                                List.of()),
+                                                                implX, new Ast.ElimNot(new Ast.Apply(p2P, jakisZbior), implX,
+                                                                Formula.appliedConstant(
+                                                                Formula.constant("hehe2", List.of(), in(jakisZbior, p1)),
+                                                                        List.of()), qq, qq))
                                                 )
                                         )
 

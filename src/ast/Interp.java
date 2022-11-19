@@ -125,7 +125,7 @@ public class Interp {
                 yield  interpInternal(new Subst(chain.v(), intp).apply(chain.rest()));
             }
             case Ast.ElimNot elimNot -> {
-               var c= elimNot.cnstChciany();
+               var c= elimNot.cnstChciany().fi();
                 assertC(c.isAtom());
 
                var not = (Formula.Not) interpInternal(elimNot.not());
@@ -156,7 +156,8 @@ public class Interp {
                 yield Formula.and(a,b);
             }
             case Ast.IntroImpl ii -> {
-                 var popq = ((Formula.Constant) ii.pop());
+                 var popqc = ((Formula.AppliedConstant) ii.pop());
+                 var popq = popqc.fi();
                  Common.assertC(popq.isAtom());
                  var pop = popq.formula();
                  var bdzie = interpInternal(new Subst(ii.v(),pop).apply(ii.nast()));

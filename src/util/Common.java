@@ -7,6 +7,6 @@ public final class Common {
     }
     public static void assertC(Boolean cond){
         if (!cond)
-            throw new AssertionError();
+            throw new ZfcException();
     }
 }

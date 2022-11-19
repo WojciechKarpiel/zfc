@@ -12,11 +12,11 @@ sealed public interface Ast permits Ast.Apply, Ast.Chain, Ast.ElimAnd, Ast.ElimN
 
     record ElimAnd(Ast and, Variable a, Variable b, Ast body) implements Ast    {}
 
-    record ElimNot(Ast not, Ast aJednak, Formula.Constant cnstChciany, Variable v, Ast body) implements  Ast{}
+    record ElimNot(Ast not, Ast aJednak, Formula.AppliedConstant cnstChciany, Variable v, Ast body) implements  Ast{}
 
     record IntroForall(Variable v, Ast body) implements Ast{}
     record IntroAnd(Ast a, Ast b) implements Ast{}
-    record IntroImpl(Formula.Constant pop, Variable v, Ast nast) implements Ast{}
+    record IntroImpl(Formula.AppliedConstant pop, Variable v, Ast nast) implements Ast{}
 
     record Chain(Variable v, Ast e, Ast rest) implements  Ast{}
 
