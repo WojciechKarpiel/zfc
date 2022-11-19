@@ -30,29 +30,41 @@ public class Interp {
     }
 
     public Map<Variable,Formula> weźŚwiadków(){ return  Collections.unmodifiableMap( swiadkowie);}
-    public  Formula interp(Ast ast) {
+    public static Formula interp(Ast ast) {
+        var i =new Interp();
+        var formula = i.interpInternal(ast);
+        // todo co jak nie ma światków?
+        if (DOPISUJ_SWIADKOW) {
+
+            Common.assertC(formula.findFreeVariables().isEmpty());
+        }else {
+            System.out.println("nie sprawdzam wolnych zmiennych");
+        }
+        return formula;
+    }
+    private   Formula interpInternal(Ast ast) {
         return switch (ast) {
 
             case Ast.Apply apply -> {
-                var fn = interp(apply.fn());
-                var arg = interp(apply.arg());
+                var fn = interpInternal(apply.fn());
+                var arg = interpInternal(apply.arg());
                 if (fn instanceof Formula.ForAll forAll) {
                     var f = forAll.f();
                     var v = forAll.var();
-                 yield    interp(new Ast.FormulaX(new Subst(v, arg).apply(f)));
+                 yield    interpInternal(new Ast.FormulaX(new Subst(v, arg).apply(f)));
                 } else {
                     throw null;
                 }
             }
 
             case Ast.ElimAnd elimAnd -> throw null;
-            case Ast.ExtractWitness ew -> switch (interp(ew.sigma())) {
+            case Ast.ExtractWitness ew -> switch (interpInternal(ew.sigma())) {
                 case Formula.Exists sigma -> {
                     var v = sigma.var();
                     var f = sigma.f();
                 put(v,f);
                     Ast apply = new Subst(Map.of(ew.witness(), v, ew.proof(), f)).apply(/*interp */(ew.body()));
-                    Formula interp = interp(apply);
+                    Formula interp = interpInternal(apply);
                     if (DOPISUJ_SWIADKOW){
                         interp = Formula.forall(v, Formula.implies(f, interp));
                     }
@@ -83,9 +95,9 @@ public class Interp {
             case Ast.ModusPonens modusPonens -> {
                 var v =modusPonens.witness();
                 var pop = modusPonens.poprzednik();
-                var wyn = interp(modusPonens.wynikanie());
+                var wyn = interpInternal(modusPonens.wynikanie());
                 if (wyn instanceof Formula.Implies implies){
-                    Formula int_pop = interp(pop);
+                    Formula int_pop = interpInternal(pop);
                     if (!(implies.poprzednik().equalsF(int_pop))) {
                         if (ALLOW_MISMATCHED_IMPLICATION_LOL) {
                             System.out.println("UWAGA, dozwalam na przypał");
@@ -99,7 +111,7 @@ public class Interp {
                     // todo wywalić świadków? z interp(pop)?
 //                    put(v, implies.nastepnik());
                     Ast apply = new Subst(v, implies.nastepnik()).apply(modusPonens.body());
-                    yield interp(apply);
+                    yield interpInternal(apply);
 
                 }else {
                     fail();
@@ -108,47 +120,48 @@ public class Interp {
             }
             case Ast.Chain chain -> {
 
-                var intp = interp(chain.e());
+                var intp = interpInternal(chain.e());
 
-                yield  interp(new Subst(chain.v(), intp).apply(chain.rest()));
+                yield  interpInternal(new Subst(chain.v(), intp).apply(chain.rest()));
             }
             case Ast.ElimNot elimNot -> {
                var c= elimNot.cnstChciany();
                 assertC(c.isAtom());
 
-               var not = (Formula.Not) interp(elimNot.not());
+               var not = (Formula.Not) interpInternal(elimNot.not());
 
-               var aJednak= interp( elimNot.aJednak());
+               var aJednak= interpInternal( elimNot.aJednak());
                assertC(not.f().equalsF(aJednak));
 
                 var v=elimNot.v();
                 var rest= elimNot.body();
 
-    yield                 interp(new Subst(v, c.formula()).apply(rest));
+    yield                 interpInternal(new Subst(v, c.formula()).apply(rest));
             }
             case Ast.IntroForall introForall -> {
-                var body = interp(introForall.body());
+                var body = interpInternal(introForall.body());
                 assertC(!swiadkowie.containsKey(introForall.v()));
-                Set<Variable> freeVars = body.FreeVarialbes();
-                assertC(
-                         freeVars.equals(Set.of(introForall.v())) ||
-                         freeVars.isEmpty()
-                 ) ;
+//                Set<Variable> freeVars = body.findFreeVariables();
+//                assertC(
+//                         freeVars.equals(Set.of(introForall.v())) ||
+//                         freeVars.isEmpty()
+//                 ) ;
 
                  yield Formula.forall(introForall.v(), body);
 
             }
             case Ast.IntroAnd introAnd -> {
-                var a = interp(introAnd.a());
-                var b = interp(introAnd.b());
+                var a = interpInternal(introAnd.a());
+                var b = interpInternal(introAnd.b());
                 yield Formula.and(a,b);
             }
             case Ast.IntroImpl ii -> {
                  var popq = ((Formula.Constant) ii.pop());
                  Common.assertC(popq.isAtom());
                  var pop = popq.formula();
-                 var bdzie = interp(new Subst(ii.v(),pop).apply(ii.nast()));
-                 Common.assertC(bdzie.FreeVarialbes().isEmpty());
+                 var bdzie = interpInternal(new Subst(ii.v(),pop).apply(ii.nast()));
+//                Set<Variable> freeVariables = bdzie.findFreeVariables();
+//                Common.assertC(freeVariables.isEmpty());
                  // nie jestem pewien czy tu nie przemycam czegoś niedobrego
             yield      Formula.implies(pop, bdzie);
 

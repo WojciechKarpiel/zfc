@@ -1,5 +1,8 @@
 package ast;
 
+import util.UnimplementedException;
+
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
@@ -76,7 +79,8 @@ public sealed interface Formula permits Formula.And, Formula.AppliedConstant, Fo
     }
 
     static AppliedConstant appliedConstant(Constant fi, List<Formula> args) {
-        if (!( fi.freeVariables.size() == args.size())) throw new RuntimeException(" fi.freeVariables.size() == args.size()");
+        if (!(fi.freeVariables.size() == args.size()))
+            throw new RuntimeException(" fi.freeVariables.size() == args.size()");
         return new AppliedConstant(fi, args);
     }
 
@@ -99,20 +103,21 @@ public sealed interface Formula permits Formula.And, Formula.AppliedConstant, Fo
         return new And(new Implies(a, b), new Implies(b, a));
     }
 
-    // TODO free var check
-    default Set<Variable> FreeVarialbes(){
-        return Set.of();
+    default   Set<Variable> findFreeVariables() {
+        FreeVarFinder freeVarFinder = new FreeVarFinder(this);
+        return freeVarFinder.apply();
     }
+
     default boolean equalsF(Formula other) {
         return switch (this) {
 
             case And and -> {
 
-                 var r= other instanceof And && and.a.equalsF( ((And) other).a()) && and.b.equalsF(((And) other).b());
-            if (!r) {
-                System.out.println("co jes");
-            }
-            yield r;
+                var r = other instanceof And && and.a.equalsF(((And) other).a()) && and.b.equalsF(((And) other).b());
+                if (!r) {
+                    System.out.println("co jes");
+                }
+                yield r;
             }
             case ForAll forAll -> {
                 if (other instanceof ForAll ofa) {
@@ -134,30 +139,131 @@ public sealed interface Formula permits Formula.And, Formula.AppliedConstant, Fo
                 } else yield false;
             }
             case Constant costant ->
-                    // teorerycznie wincyj by trzeba, ale to wystarczy na razie
+                // teorerycznie wincyj by trzeba, ale to wystarczy na razie
                     costant.equals(other);
-            case Equals equals -> throw new UnimplementedException();
-            case Exists exists -> throw new UnimplementedException();
+            case Equals equals ->{
+                if (other instanceof Equals) {
+            var r = equals.a().equalsF(((Equals) other).a());
+           r = r && equals.b().equalsF(((Equals) other).b());
+            yield r;
+            } else yield false;
+        }
+            case Exists exists -> {
+                if (other instanceof  Exists e){
+
+                    Formula apply = new Subst(exists.var(), e.var()).apply(exists.f());
+                    Formula f = e.f();
+                    yield apply.equalsF(f);
+                }else yield false;
+            }
             case Implies implies -> {
-                if (other instanceof  Implies o){
-                  yield   implies.poprzednik().equalsF(o.poprzednik())  && implies.nastepnik.equalsF(o.nastepnik());
-                }else  yield false;
+                if (other instanceof Implies o) {
+                    yield implies.poprzednik().equalsF(o.poprzednik()) && implies.nastepnik.equalsF(o.nastepnik());
+                } else yield false;
             }
             case In in -> {
                 if (other instanceof In o) {
                     var a = in.element().equalsF(o.element());
-                    var b= in.set.equalsF(o.set);
-                    yield a &&b;
+                    var b = in.set.equalsF(o.set);
+                    yield a && b;
                 } else yield false;
             }
-            case Not not -> throw new UnimplementedException();
-            case Or or -> throw new UnimplementedException();
+            case Not not -> other instanceof  Not && not.f().equalsF(((Not) other).f());
+            case Or or ->
+                other instanceof Or && or.a().equalsF(((Or) other).a())&& or.b().equalsF(((Or) other).b());
+
+
             case Variable v -> other instanceof Variable && v.equals(other);
         };
     }
 
 }
 
-class UnimplementedException extends RuntimeException {
+
+
+class FreeVarFinder {
+    private final Formula formula;
+    Set<Variable> znalezione = new HashSet<>();
+    Set<Variable> spokowe = new HashSet<>();
+
+    public FreeVarFinder(Formula formula) {
+
+        this.formula = formula;
+    }
+
+    Set<Variable> apply() {
+        qqqq(formula);
+        return znalezione;
+    }
+
+
+    void dodaj(Variable v) {
+        if (!spokowe.contains(v))
+            znalezione.add(v);
+    }
+
+    private void qqqq(Formula formula) {
+        switch (formula) {
+
+            case Formula.And and -> {
+                qqqq(and.a());
+                qqqq(and.b());
+            }
+            case Formula.AppliedConstant appliedConstant -> {
+                qqqq(appliedConstant.fi());
+                appliedConstant.args().forEach(this::qqqq);
+            }
+            case Formula.Constant constant -> {
+                boolean[] qw = new boolean[constant.arity()];
+                for(int i=0; i< constant.arity();i++){
+                    var v = constant.freeVariables().get(i);
+                    qw[i] = spokowe.add(v);
+                }
+qqqq(           constant.formula());
+
+                for(int i=0; i< constant.arity();i++){
+                    if (qw[i])
+                        spokowe.remove(
+                    constant.freeVariables().get(i));
+                }
+
+            }
+            case Formula.Equals equals -> {
+                qqqq(equals.a());
+                qqqq(equals.b());
+            }
+            case Formula.Exists exists -> {
+                var nieByloWczesniej = spokowe.add(exists.var());
+                qqqq(exists.f());
+                if(nieByloWczesniej)
+                    spokowe.remove(exists.var());
+            }
+            case Formula.ForAll forAll -> {
+                var nieByloWczesniej = spokowe.add(forAll.var());
+                qqqq(forAll.f());
+                if (nieByloWczesniej) {
+                    spokowe.remove(forAll.var());
+                }
+            }
+            case Formula.Implies implies -> {
+               qqqq(implies.poprzednik());
+               qqqq(implies.nastepnik());
+            }
+            case Formula.In in -> {
+                qqqq(in.element());
+                qqqq(in.set());
+            }
+            case Formula.Not not -> {
+                qqqq(not.f());
+            }
+            case Formula.Or or -> {
+                qqqq(or.a());
+                qqqq(or.b());
+            }
+            case Variable local -> {
+                dodaj(local);
+            }
+        }
+    }
 
 }

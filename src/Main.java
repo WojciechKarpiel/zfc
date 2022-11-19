@@ -1,16 +1,11 @@
 import ast.*;
 import static ast.Formula.*;
-import parser.Parser;
-import parser.TokenTree;
+
 import util.Common;
 
 import static ast.Ast.*;
-import java.util.Collections;
+
 import java.util.List;
-import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class Main {
     public static void main(String[] args) {
@@ -69,7 +64,7 @@ kazdyZbiorPustyJestSobieRowny= new ExtractWitness(new FormulaX(ZFC.PUSTY()) ,p1,
 
         Interp.DOPISUJ_SWIADKOW=true; // czytelniej
         Formula interp = i.interp(kazdyZbiorPustyJestSobieRowny);
-        Common.assertC(interp.FreeVarialbes().isEmpty());
+        Common.assertC(interp.findFreeVariables().isEmpty());
         System.out.println(interp);
         if (!Interp.DOPISUJ_SWIADKOW)
                 System.out.println(i.weźŚwiadków());
