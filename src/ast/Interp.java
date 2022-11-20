@@ -1,24 +1,24 @@
 package ast;
 
 import util.Common;
+import util.ZfcException;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 import static util.Common.*;
 public class Interp {
     public static boolean ALLOW_MISMATCHED_IMPLICATION_LOL = false;
     public static boolean DOPISUJ_SWIADKOW = true;
     public static boolean ALLOW_FREE_VARS = false;
-    public void addAssumption(Variable v, Formula assuption){
+    public void addAssumption(Formula.VarRef v, Formula assuption){
         put(v,assuption);
     }
 
-    private final  Map<Variable,Formula> swiadkowie = new HashMap<>();
+    private final  Map<Formula.VarRef,Formula> swiadkowie = new HashMap<>();
 
-    private void  put(Variable v, Formula f){
+    private void  put(Formula.VarRef v, Formula f){
         var byl=swiadkowie.put(v,f);
         if (!( byl==null))
         {
@@ -29,7 +29,7 @@ public class Interp {
         }
     }
 
-    public Map<Variable,Formula> weźŚwiadków(){ return  Collections.unmodifiableMap( swiadkowie);}
+    public Map<Formula.VarRef,Formula> weźŚwiadków(){ return  Collections.unmodifiableMap( swiadkowie);}
     public static Formula interp(Ast ast) {
         var i =new Interp();
         var formula = i.interpInternal(ast);
@@ -53,11 +53,11 @@ public class Interp {
                     var v = forAll.var();
                  yield    interpInternal(new Ast.FormulaX(new Subst(v, arg).apply(f)));
                 } else {
-                    throw null;
+                    throw new ZfcException();
                 }
             }
 
-            case Ast.ElimAnd elimAnd -> throw null;
+            case Ast.ElimAnd elimAnd -> throw new ZfcException();
             case Ast.ExtractWitness ew -> switch (interpInternal(ew.sigma())) {
                 case Formula.Exists sigma -> {
                     var v = sigma.var();
@@ -70,7 +70,7 @@ public class Interp {
                     }
                     yield interp;
                 }
-                default -> throw null;
+                default -> throw new ZfcException("miala być sigma");
             };
             case Ast.FormulaX formul -> switch (formul.f()){
                 case Formula.AppliedConstant ac ->
@@ -86,11 +86,12 @@ public class Interp {
                 default -> formul.f();
             };
             case Variable.Local local -> {
-                    if (ALLOW_FREE_VARS)
-                        yield                    swiadkowie.getOrDefault(local,local);
-                    else {
+                    if (ALLOW_FREE_VARS) {
+                        var todo_this_replace = Formula.varRef(local);
+                        yield                    swiadkowie.getOrDefault(todo_this_replace, todo_this_replace);
+                    } else {
                             fail();
-                        throw null;}
+                        throw new ZfcException();}
                     }
             case Ast.ModusPonens modusPonens -> {
                 var v =modusPonens.witness();
@@ -109,13 +110,13 @@ public class Interp {
                         }
                     }
                     // todo wywalić świadków? z interp(pop)?
-//                    put(v, implies.nastepnik());
+//                    put(variable, implies.nastepnik());
                     Ast apply = new Subst(v, implies.nastepnik()).apply(modusPonens.body());
                     yield interpInternal(apply);
 
                 }else {
                     fail();
-                    throw null;
+                    throw new ZfcException();
                 }
             }
             case Ast.Chain chain -> {
@@ -124,30 +125,30 @@ public class Interp {
 
                 yield  interpInternal(new Subst(chain.v(), intp).apply(chain.rest()));
             }
-            case Ast.ElimNot elimNot -> {
-               var c= elimNot.cnstChciany().fi();
+            case Ast.ExFalsoQuodlibet exFalsoQuodlibet -> {
+               var c= exFalsoQuodlibet.cnstChciany().fi();
                 assertC(c.isAtom());
 
-               var not = (Formula.Not) interpInternal(elimNot.not());
+               var not = (Formula.Not) interpInternal(exFalsoQuodlibet.not());
 
-               var aJednak= interpInternal( elimNot.aJednak());
+               var aJednak= interpInternal( exFalsoQuodlibet.aJednak());
                assertC(not.f().equalsF(aJednak));
 
-                var v=elimNot.v();
-                var rest= elimNot.body();
+                var v= exFalsoQuodlibet.v();
+                var rest= exFalsoQuodlibet.body();
 
     yield                 interpInternal(new Subst(v, c.formula()).apply(rest));
             }
             case Ast.IntroForall introForall -> {
                 var body = interpInternal(introForall.body());
-                assertC(!swiadkowie.containsKey(introForall.v()));
+                assertC(!swiadkowie.containsKey(Formula.varRef( introForall.v())));
 //                Set<Variable> freeVars = body.findFreeVariables();
 //                assertC(
-//                         freeVars.equals(Set.of(introForall.v())) ||
+//                         freeVars.equals(Set.of(introForall.variable())) ||
 //                         freeVars.isEmpty()
 //                 ) ;
 
-                 yield Formula.forall(introForall.v(), body);
+                 yield Formula.forall(Formula.varRef( introForall.v()), body);
 
             }
             case Ast.IntroAnd introAnd -> {

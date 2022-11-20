@@ -1,16 +1,30 @@
 package ast;
 
-import util.UnimplementedException;
-
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
 
-public sealed interface Formula permits Formula.And, Formula.AppliedConstant, Formula.Constant, Formula.Equals, Formula.Exists, Formula.ForAll, Formula.Implies, Formula.In, Formula.Not, Formula.Or, Variable {
+public sealed interface Formula permits Formula.And, Formula.AppliedConstant, Formula.Constant, Formula.Equals, Formula.Exists, Formula.ForAll, Formula.Implies, Formula.In, Formula.Not, Formula.Or, Formula.VarRef {
 
 
     Metadata metadata();
+
+    record VarRef(Variable variable, Metadata metadata) implements  Formula{}
+
+    static VarRef varRef() {
+        return Formula.varRef("?");
+    }
+    static VarRef varRef(String name){
+        return varRef(Variable.local(name));
+    }
+    static VarRef varRef(Variable v){
+        return varRef(v, Metadata.EMPTY);
+    }
+
+    static VarRef varRef(Variable v, Metadata m){
+        return  new VarRef(v,m);
+    }
 
     record Or(Formula a, Formula b, Metadata metadata) implements Formula {
     }
@@ -42,29 +56,29 @@ public sealed interface Formula permits Formula.And, Formula.AppliedConstant, Fo
         return new Implies(a, b,m);
     }
 
-    record Exists(Variable var, Formula f, Metadata metadata) implements Formula {
+    record Exists(VarRef var, Formula f, Metadata metadata) implements Formula {
     }
 
-    static Exists exists(Variable var, Formula f) {
+    static Exists exists(VarRef var, Formula f) {
         return exists(var,f, Metadata.EMPTY);
     }
-    static Exists exists(Variable var, Formula f,Metadata m) {
+    static Exists exists(VarRef var, Formula f,Metadata m) {
         return new Exists(var, f,m);
     }
 
-    static Formula existsOne(Function<Variable, Formula> varToFormula) {
-        var x = Variable.local("x");
-        var y = Variable.local("y");
+    static Formula existsOne(Function<VarRef, Formula> varToFormula) {
+        var x =   Formula.varRef("x");
+        var y = Formula.varRef("y");
         return exists(y, forall(x, iff(varToFormula.apply(x), eql(x, y))));
     }
 
-    record ForAll(Variable var, Formula f, Metadata metadata) implements Formula {
+    record ForAll(VarRef var, Formula f, Metadata metadata) implements Formula {
     }
 
-    static Formula forall(Variable var, Formula f) {
+    static Formula forall(VarRef var, Formula f) {
         return forall(var, f,Metadata.EMPTY);
     }
-    static Formula forall(Variable var, Formula f, Metadata m) {
+    static Formula forall(VarRef var, Formula f, Metadata m) {
         return new ForAll(var, f,m);
     }
 
@@ -174,7 +188,7 @@ public sealed interface Formula permits Formula.And, Formula.AppliedConstant, Fo
                 if (other instanceof AppliedConstant oap) {
                     var r = appliedConstant.fi.equalsF(oap.fi());
                     for (int i = 0; r && i < appliedConstant.args().size(); i++) {
-                        r = r && appliedConstant.args.get(i).equalsF(oap.args().get(i));
+                        r = appliedConstant.args.get(i).equalsF(oap.args().get(i));
                     }
                     yield r;
                 } else yield false;
@@ -214,7 +228,7 @@ public sealed interface Formula permits Formula.And, Formula.AppliedConstant, Fo
                 other instanceof Or && or.a().equalsF(((Or) other).a())&& or.b().equalsF(((Or) other).b());
 
 
-            case Variable v -> other instanceof Variable && v.equals(other);
+            case VarRef v -> other instanceof VarRef && v.equals(other);
         };
     }
 
@@ -274,16 +288,16 @@ qqqq(           constant.formula());
                 qqqq(equals.b());
             }
             case Formula.Exists exists -> {
-                var nieByloWczesniej = spokowe.add(exists.var());
+                var nieByloWczesniej = spokowe.add(exists.var().variable());
                 qqqq(exists.f());
                 if(nieByloWczesniej)
-                    spokowe.remove(exists.var());
+                    spokowe.remove(exists.var().variable());
             }
             case Formula.ForAll forAll -> {
-                var nieByloWczesniej = spokowe.add(forAll.var());
+                var nieByloWczesniej = spokowe.add(forAll.var().variable());
                 qqqq(forAll.f());
                 if (nieByloWczesniej) {
-                    spokowe.remove(forAll.var());
+                    spokowe.remove(forAll.var().variable());
                 }
             }
             case Formula.Implies implies -> {
@@ -301,8 +315,8 @@ qqqq(           constant.formula());
                 qqqq(or.a());
                 qqqq(or.b());
             }
-            case Variable local -> {
-                dodaj(local);
+            case Formula.VarRef local -> {
+                dodaj(local.variable());
             }
         }
     }

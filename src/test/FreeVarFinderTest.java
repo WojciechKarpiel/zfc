@@ -13,18 +13,18 @@ class FreeVarFinderTest {
 
     @Test
     void poprostuVar(){
-        Variable.Local hehe = Variable.local("hehe");
-        Variable.Local hehe2 = Variable.local("hehe");
-       assertEquals(Set.of(hehe) ,  hehe.findFreeVariables());
+        var hehe = Formula.varRef("hehe");
+        var hehe2 = Formula.varRef("hehe");
+       assertEquals(Set.of(hehe.variable()) ,  hehe.findFreeVariables());
 
        Assertions.assertTrue (Formula.forall(hehe, hehe).findFreeVariables().isEmpty());
 
         assertEquals(
-                Set.of(hehe2),
+                Set.of(hehe2.variable()),
                 Formula.forall(hehe, Formula.and(hehe2,hehe)).findFreeVariables()) ;
 
         assertEquals(
-                Set.of(hehe2),
+                Set.of(hehe2.variable()),
                 Formula.forall(hehe, Formula.and(hehe,hehe2)).findFreeVariables()) ;
     }
 

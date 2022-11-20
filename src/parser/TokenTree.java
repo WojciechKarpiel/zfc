@@ -1,12 +1,26 @@
 package parser;
 
+import ast.Metadata;
+
 import java.util.List;
 
 public sealed interface TokenTree permits TokenTree.Leaf, TokenTree.Branch {
+
+    Metadata getMetadata();
     record Leaf(String s, Position p) implements TokenTree {
+
+
+        @Override
+        public Metadata getMetadata() {
+            return new Metadata(p, s);
+        }
     }
 
     record Branch(List<TokenTree> trees, Position p1, Position p2) implements TokenTree {
+        @Override
+        public Metadata getMetadata() {
+            return new Metadata(p1,p2);
+        }
     }
 
     private static String spaces(int i) {

@@ -18,9 +18,9 @@ public class ZFC {
     public static final Formula EXTENSIONALITY;
 
     static {
-        var a = Variable.local("a");
-        var b = Variable.local("b");
-        var x = Variable.local("x");
+        var a = Formula.varRef("a");
+        var b = Formula.varRef("b");
+        var x = Formula.varRef("x");
         EXTENSIONALITY =
                 forall(a,
                         forall(b,
@@ -35,26 +35,26 @@ public class ZFC {
 
      {
 
-        var x = Variable.local("x");
-        var y = Variable.local("y");
+        var x = Formula.varRef("x");
+        var y = Formula.varRef("y");
         return  exists(x, forall(y, not(in(y, x))));
     }
 
     public static Formula PODZBIOROW(Constant fi) {
         if (!( fi.arity() >= 2)) throw new RuntimeException(" fi.arity() >= 2");
         int n = fi.arity() - 2;
-        var ps = new ArrayList<Variable.Local>(n);
+        var ps = new ArrayList<Formula.VarRef>(n);
         for (int i = 1; i <= n; i++) {
-            ps.add(Variable.local("p" + i));
+            ps.add(Formula.varRef("p" + i));
         }
-        var x = Variable.local("x");
-        var a = Variable.local("a");
-        var b = Variable.local("b");
+        var x = Formula.varRef("x");
+        var a = Formula.varRef("a");
+        var b = Formula.varRef("b");
 
         var args = new ArrayList<Formula>(fi.arity());
         args.add(x);
         args.add(b);
-        args.addAll(ps);
+        args.addAll( ps);
         var ret =
                 forall(b, exists(a,
                         iff(in(x, a),
@@ -69,10 +69,10 @@ public class ZFC {
     public static final Formula PARY;
 
     static {
-        var a = Variable.local("a");
-        var b = Variable.local("b");
-        var c = Variable.local("c");
-        var x = Variable.local("x");
+        var a = Formula.varRef("a");
+        var b = Formula.varRef("b");
+        var c = Formula.varRef("c");
+        var x = Formula.varRef("x");
 
         PARY =
                 forall(a,
@@ -87,10 +87,10 @@ public class ZFC {
     public static final Formula SUMY;
 
     static {
-        var a = Variable.local("a");
-        var u = Variable.local("u");
-        var r = Variable.local("r");
-        var x = Variable.local("x");
+        var a = Formula.varRef("a");
+        var u = Formula.varRef("u");
+        var r = Formula.varRef("r");
+        var x = Formula.varRef("x");
 
         SUMY = forall(r, exists(u, forall(x, iff(in(x, u), exists(a, and(in(x, a), in(a, r)))))));
     }
@@ -98,10 +98,10 @@ public class ZFC {
     public static final Formula POTEGOWY;
 
     static {
-        var x = Variable.local("x");
-        var y = Variable.local("y");
-        var z = Variable.local("z");
-        var p = Variable.local("p");
+        var x = Formula.varRef("x");
+        var y = Formula.varRef("y");
+        var z = Formula.varRef("z");
+        var p = Formula.varRef("p");
 
         POTEGOWY = forall(x, exists(p, forall(z,
                 iff(in(z, p), forall(y, implies(in(y, z), in(y, x)))))));
@@ -110,12 +110,12 @@ public class ZFC {
     public static final Formula NIESKONCZONOSCI;
 
     static {
-        var x = Variable.local("x");
-        var a = Variable.local("a");
-        var b = Variable.local("b");
-        var c = Variable.local("c");
-        var d = Variable.local("d");
-        var e = Variable.local("e");
+        var x = Formula.varRef("x");
+        var a = Formula.varRef("a");
+        var b = Formula.varRef("b");
+        var c = Formula.varRef("c");
+        var d = Formula.varRef("d");
+        var e = Formula.varRef("e");
 
         NIESKONCZONOSCI =
                 exists(x, exists(a, and(
@@ -127,14 +127,14 @@ public class ZFC {
     public static Formula ZASTEPOWANIA(Constant Θ/*, Variable X, Variable Y*/) {
         int n = Θ.arity() - 3;
         if (!( n >= 0)) throw new RuntimeException(" n >= 0");
-        var X = Variable.local("X");
-        var Y = Variable.local("Y");
-        var x = Variable.local("x");
-        var y = Variable.local("y");
-        var ps = new ArrayList<Variable>();
-        for (int i = 1; i <= n; i++) ps.add(Variable.local("p" + i));
+        var X = Formula.varRef("X");
+        var Y = Formula.varRef("Y");
+        var x = Formula.varRef("x");
+        var y = Formula.varRef("y");
+        var ps = new ArrayList<Formula.VarRef>();
+        for (int i = 1; i <= n; i++) ps.add(Formula.varRef("p" + i));
 
-        Function<Variable, Formula> applyΘ = q -> {
+        Function<VarRef, Formula> applyΘ = q -> {
             var args = new ArrayList<Formula>(Θ.arity());
             args.add(x);
             args.add(q);
@@ -156,27 +156,27 @@ public class ZFC {
         return forall(X, exists(Y, res));
     }
 
-    private static Formula nonEmpty(Variable set) {
-        var x = Variable.local("x");
+    private static Formula nonEmpty(VarRef set) {
+        var x = Formula.varRef("x");
         return exists(x, in(x, set));
     }
 
     public static final Formula REGULARNOSCI;
 
     static {
-        var x = Variable.local("x");
-        var y = Variable.local("y");
-        var z = Variable.local("z");
+        var x = Formula.varRef("x");
+        var y = Formula.varRef("y");
+        var z = Formula.varRef("z");
         REGULARNOSCI = forall(x, implies(nonEmpty(x), exists(y, and(in(y, x), not(exists(z, and(in(z, x), in(z, y))))))));
     }
 
     public static final Formula WYBORU;
     static {
-        var x = Variable.local("x");
-        var a = Variable.local("a");
-        var b = Variable.local("b");
-        var r = Variable.local("r");
-        var s = Variable.local("s");
+        var x = Formula.varRef("x");
+        var a = Formula.varRef("a");
+        var b = Formula.varRef("b");
+        var r = Formula.varRef("r");
+        var s = Formula.varRef("s");
         var nonEmprty =forall(a, implies(in(a,r), nonEmpty(a)));
         var drw = forall(a,forall(b,implies(
                 and(in(a,r),and(in(b,r),not(eql(a,b)))),

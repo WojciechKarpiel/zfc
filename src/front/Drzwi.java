@@ -25,11 +25,6 @@ public class Drzwi {
     }
 
     private void finishCurrentGoal() {
-        var cel = cele.poll();
-        swiadkowie.put(cel.getLeft(), cel.getRight());
-        interp.addAssumption(cel.getLeft(), cel.getRight());
-//        interp = new Interp();
-//        swiadkowie.forEach((v,f)-> interp.addAssumption(v,f));
     }
 
 

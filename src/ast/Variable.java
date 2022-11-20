@@ -1,6 +1,6 @@
 package ast;
 
-public sealed interface Variable extends Formula, Ast permits  Variable.Local {
+public sealed interface Variable extends /*Formula,*/ Ast permits  Variable.Local {
 //        record Bruijn(int i) implements Variable {}
 
 //    record NamedVar(String name) implements Variable {
@@ -15,11 +15,6 @@ public sealed interface Variable extends Formula, Ast permits  Variable.Local {
 
     final class Local implements Variable {
 
-        private final Metadata metadata;
-
-        public  Metadata metadata(){
-            return  metadata;
-        }
         @Override
         public boolean equals(Object obj) {
             return this == obj;
@@ -32,8 +27,7 @@ public sealed interface Variable extends Formula, Ast permits  Variable.Local {
 
         private final String name;
 
-        public Local(String name,Metadata metadata){
-            this.metadata = metadata;
+        public Local(String name){
             this.name = name;
         }
 
@@ -48,10 +42,7 @@ public sealed interface Variable extends Formula, Ast permits  Variable.Local {
         }
     }
     static Local local(String name){
-        return local(name, Metadata.EMPTY);
-    }
-    static Local local(String name, Metadata m){
-        return new Local(name, m);
+        return new Local(name);
     }
 /*
     static GenSym createFresh(String name) {
