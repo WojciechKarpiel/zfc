@@ -51,7 +51,7 @@ public class Interp {
                 if (fn instanceof Formula.ForAll forAll) {
                     var f = forAll.f();
                     var v = forAll.var();
-                 yield    interpInternal(new Ast.FormulaX(new Subst(v, arg).apply(f)));
+                 yield    interpInternal( Ast.formulaX(new Subst(v, arg).apply(f)));
                 } else {
                     throw new ZfcException();
                 }

@@ -44,31 +44,29 @@ public record Subst(Map<Variable, Formula> map)  {
     public Ast apply(Ast ast){
         return switch (ast){
 
-            case Ast.Apply apply -> new Ast.Apply(apply( apply.fn()), apply( apply.arg() ));
+            case Ast.Apply apply -> Ast.apply(apply( apply.fn()), apply( apply.arg() ));
             case Ast.ElimAnd elimAnd -> throw new UnimplementedException();
-            case Ast.ExtractWitness extractWitness -> new Ast.ExtractWitness(apply(extractWitness.sigma()),
+            case Ast.ExtractWitness extractWitness -> Ast.extractWitness(apply(extractWitness.sigma()),
                    checkVar( extractWitness.witness()), checkVar( extractWitness.proof()),apply(extractWitness.body()) );
-            case Ast.FormulaX formulaX -> new Ast.FormulaX( apply(formulaX.f()));
+            case Ast.FormulaX formulaX -> Ast.formulaX( apply(formulaX.f()));
             case Ast.AstVar v -> {
                 Formula orDefault = map().getOrDefault( v.variable(), Formula.varRef(v.variable(),v.metadata()) /* edgy ? */);
 
-                yield new Ast.FormulaX(orDefault);
+                yield Ast.formulaX(orDefault);
             } // eee
 
-            case Ast.ModusPonens modusPonens -> new Ast.ModusPonens(apply(modusPonens.wynikanie()), apply(modusPonens.poprzednik()) , modusPonens.witness(), apply(modusPonens.body()));
+            case Ast.ModusPonens modusPonens -> Ast.modusPonens(apply(modusPonens.wynikanie()), apply(modusPonens.poprzednik()) , modusPonens.witness(), apply(modusPonens.body()));
             case Ast.Chain chain -> {
 
                 if (map.containsKey(chain.v())) throw new RuntimeException(" !map.containsKey(chain.variable())");
 
-                yield new Ast.Chain(chain.v(), apply(chain.e()),apply(chain.rest()));
+                yield Ast.chain(chain.v(), apply(chain.e()),apply(chain.rest()), chain.metadata());
             }
-            case Ast.ExFalsoQuodlibet exFalsoQuodlibet -> new Ast.ExFalsoQuodlibet(apply(exFalsoQuodlibet.not()),apply(exFalsoQuodlibet.aJednak()),
+            case Ast.ExFalsoQuodlibet exFalsoQuodlibet -> Ast.exFalsoQuodlibet(apply(exFalsoQuodlibet.not()),apply(exFalsoQuodlibet.aJednak()),
                     (Formula.AppliedConstant)  apply(    exFalsoQuodlibet.cnstChciany()), checkVar(exFalsoQuodlibet.v()), apply(exFalsoQuodlibet.body()));
-            case Ast.IntroAnd introAnd -> new Ast.IntroAnd(apply(introAnd.a()),
-                    apply(introAnd.b())
-            );
-            case Ast.IntroForall introForall -> new Ast.IntroForall( checkVar(introForall.v()), apply(introForall.body()));
-            case Ast.IntroImpl introImpl -> new Ast.IntroImpl((Formula.AppliedConstant) apply(introImpl.pop()),checkVar(introImpl.v()), apply(introImpl.nast())   );
+            case Ast.IntroAnd introAnd -> Ast.introAnd(apply(introAnd.a()), apply(introAnd.b()), introAnd.metadata());
+            case Ast.IntroForall introForall -> Ast.introForAll( checkVar(introForall.v()), apply(introForall.body()));
+            case Ast.IntroImpl introImpl -> Ast.introImpl((Formula.AppliedConstant) apply(introImpl.pop()),checkVar(introImpl.v()), apply(introImpl.nast())   );
         };
     }
 

@@ -11,6 +11,7 @@ import java.util.function.Function;
 import static ast.Formula.in;
 import static org.junit.jupiter.api.Assertions.*;
 import static ast.Formula.*;
+import static ast.Ast.*;
 class InterpTest {
 
     @Test
@@ -24,7 +25,7 @@ var orig2 = Interp.DOPISUJ_SWIADKOW;
         Interp.DOPISUJ_SWIADKOW =false;
         Interp.ALLOW_FREE_VARS = true;
         Function<Ast.AstVar, Ast> elo = ww ->
-                new Ast.ModusPonens(new Ast.FormulaX(
+                 Ast.modusPonens(formulaX(
                         implies(x,y)), ww, q.variable(),q );
 
 
@@ -49,28 +50,28 @@ Interp.DOPISUJ_SWIADKOW = orig2;
         var jakisZbior = Variable.local("jakis");
         var implX = Variable.local("i");
         var qq = Variable.local("qq");
-        Ast kazdyZbiorPustyJestSobieRowny = new Ast.ExtractWitness(new Ast.FormulaX(ZFC.PUSTY()), p1, p1P,
-                new Ast.ExtractWitness(new Ast.FormulaX(ZFC.PUSTY()), p2, p2P,
+        Ast kazdyZbiorPustyJestSobieRowny =  Ast.extractWitness( Ast.formulaX(ZFC.PUSTY()), p1, p1P,
+                 Ast.extractWitness(Ast.formulaX(ZFC.PUSTY()), p2, p2P,
                         /* tu chcę mieć (Eq p1 p2) */
                         // problem : skąd wynikanie, żeby zast
-                        new Ast.Chain(impliesElo,
-                                new Ast.Apply(new Ast.Apply(new Ast.FormulaX(ZFC.EXTENSIONALITY),new Ast.AstVar(p1,Metadata.EMPTY )), Ast.astVar(p2)),
+                         Ast.chain(impliesElo,
+                                Ast.apply(Ast.apply(Ast.formulaX(ZFC.EXTENSIONALITY),new Ast.AstVar(p1,Metadata.EMPTY )), Ast.astVar(p2)),
 //                            impliesElo
-                                new Ast.ModusPonens(Ast.astVar(impliesElo),
+                                 Ast.modusPonens(Ast.astVar(impliesElo),
                                         /*poprzednikWynikaniaAksjomatyEks*/
                                         //ForAll[var=x77, f=And[a=Implies[poprzednik=In[element=x77, set=x72], nastepnik=In[element=x77, set=x94]], b=Implies[poprzednik=In[element=x77, set=x94], nastepnik=In[element=x77, set=x72]]]]
-                                        new Ast.IntroForall(jakisZbior,
-                                                new Ast.IntroAnd(
+                                         Ast.introForAll(jakisZbior,
+                                                 Ast.introAnd(
                                                         // Implies[poprzednik=In[element=x77, set=x72], nastepnik=In[element=x77, set=x94]]
-                                                        new Ast.IntroImpl( Formula.appliedConstant( Formula.constant("elo", List.of(), in(varRef( jakisZbior),varRef(p1))),List.of()),
-                                                                implX, new Ast.ExFalsoQuodlibet(new Ast.Apply(Ast.astVar( p1P), Ast.astVar( jakisZbior)), Ast.astVar( implX),
+                                                        Ast.introImpl( Formula.appliedConstant( Formula.constant("elo", List.of(), in(varRef( jakisZbior),varRef(p1))),List.of()),
+                                                                implX,  Ast.exFalsoQuodlibet(Ast.apply(Ast.astVar( p1P), Ast.astVar( jakisZbior)), Ast.astVar( implX),
                                                                 Formula.appliedConstant(
                                                                 Formula.constant("hehe", List.of(), in( varRef(jakisZbior),varRef(p2) /*2!*/)), List.of()) , qq,Ast.astVar(  qq)))
                                                         ,
                                                         // tu będzie to samo
-                                                        new Ast.IntroImpl(Formula.appliedConstant( Formula.constant("elo2", List.of(), in(varRef(jakisZbior),varRef( p2))),
+                                                         Ast.introImpl(Formula.appliedConstant( Formula.constant("elo2", List.of(), in(varRef(jakisZbior),varRef( p2))),
                                                                 List.of()),
-                                                                implX, new Ast.ExFalsoQuodlibet(new Ast.Apply(Ast.astVar(p2P), Ast.astVar(jakisZbior)), Ast.astVar(implX),
+                                                                implX,  Ast.exFalsoQuodlibet(Ast.apply(Ast.astVar(p2P), Ast.astVar(jakisZbior)), Ast.astVar(implX),
                                                                 Formula.appliedConstant(
                                                                 Formula.constant("hehe2", List.of(), in( varRef(jakisZbior),varRef( p1))),
                                                                         List.of()), qq, Ast.astVar( qq)))
