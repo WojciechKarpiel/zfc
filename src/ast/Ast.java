@@ -98,6 +98,9 @@ Metadata metadata();
     static AstVar astVar(Variable v){
         return astVar(v,Metadata.EMPTY);
     }
+    static AstVar astVar(String s, Metadata m) {
+        return Ast.astVar(Variable.local(s),m);
+    }
     static AstVar astVar(Variable v, Metadata m) {
         return new AstVar(v,m);
     }

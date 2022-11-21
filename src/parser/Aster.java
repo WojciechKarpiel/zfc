@@ -2,32 +2,33 @@ package parser;
 
 import ast.*;
 import util.Common;
+import util.UnimplementedException;
+import util.ZfcException;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-
-import static ast.Ast.*;
+import java.rmi.dgc.Lease;
+import java.util.*;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class Aster {
 
 
     private Aster() {
-        this.vars =new HashMap<>();
+        this.vars = new HashMap<>();
     }
-    private Map<String, Variable> vars;
+
+    private final Map<String, Variable> vars;
 
     static final Map<String, Formula> AXIOMS = Map.of(
             "ekstensionalności", ZFC.EXTENSIONALITY,
             "pary", ZFC.PARY
     );
 
-    public static Formula parseFormula(TokenTree tokenTree){
-        return new Aster().parseFormula_(tokenTree);
+    public static Formula parseFormula(TokenTree tokenTree) {
+        return new Aster().internalPrsF(tokenTree);
     }
 
-    private Formula parseFormula_(TokenTree tree) {
+    private Formula internalPrsF(TokenTree tree) {
         return switch (tree) {
             case TokenTree.Leaf leaf -> // aksjomaty?
                 //todo pos var?
@@ -40,48 +41,116 @@ public class Aster {
                     case "forall":
                     case "exists":
                         var vf = ((TokenTree.Leaf) thisTrees.get(1));
-                        var vv =Variable.local(vf.s());
-                        var v = Formula.varRef( vv , (vf.getMetadata()));
-                        var prev = vars.put(vf.s(), vv);
+                        var vv = Variable.local(vf.s());
+                        var v = Formula.varRef(vv, (vf.getMetadata()));
+                        var prev = put(vf.s(), vv);
                         Common.assertC(thisTrees.size() == 3);
                         Formula f;
                         if (hds.equals("forall")) {
-                            f = Formula.forall(v, parseFormula_(thisTrees.get(2)), branch.getMetadata());
+                            f = Formula.forall(v, internalPrsF(thisTrees.get(2)), branch.getMetadata());
                         } else {
-                            f = Formula.exists(v, parseFormula_(thisTrees.get(2)), branch.getMetadata());
+                            f = Formula.exists(v, internalPrsF(thisTrees.get(2)), branch.getMetadata());
                         }
-                        vars.put(vf.s(), prev);
+                        put(vf.s(), prev);
                         yield f;
                     case "or":
-                        yield Formula.or(parseFormula_(thisTrees.get(1)), parseFormula_(thisTrees.get(2)), branch.getMetadata());
+                        yield Formula.or(internalPrsF(thisTrees.get(1)), internalPrsF(thisTrees.get(2)), branch.getMetadata());
                     case "and":
-                        yield Formula.and(parseFormula_(thisTrees.get(1)), parseFormula_(thisTrees.get(2)), branch.getMetadata());
+                        yield Formula.and(internalPrsF(thisTrees.get(1)), internalPrsF(thisTrees.get(2)), branch.getMetadata());
                     case "implies":
-                        yield Formula.implies(parseFormula_(thisTrees.get(1)), parseFormula_(thisTrees.get(2)), branch.getMetadata());
-//                    case "constant":
-//                        yield Formula.constant()
+                        yield Formula.implies(internalPrsF(thisTrees.get(1)), internalPrsF(thisTrees.get(2)), branch.getMetadata());
+                    case "applyConstant":
+                    case "appliedConstant":
+                        var fi = (Formula.Constant) internalPrsF(thisTrees.get(1));
+                        var argst = ((TokenTree.Branch) thisTrees.get(2)).trees();
+                        Common.assertC(argst.size() == fi.arity());
+                        var args = argst.stream().map(this::internalPrsF).toList();
+                        yield Formula.appliedConstant(fi, args, branch.getMetadata());
+                    case "constant":
+                        var name = ((TokenTree.Leaf) thisTrees.get(1)).s();
+                        var vars = ((TokenTree.Branch) thisTrees.get(2)).trees()
+                                .stream().<Variable>map(vw -> {
+                                    var q = ((TokenTree.Leaf) vw);
+                                    return Variable.local(q.s());
+                                }).toList();
+
+                        var ff = internalPrsF(thisTrees.get(3));
+                        yield Formula.constant(name, vars, ff, branch.getMetadata());
 
                     default:
-                        Common.fail();
-                        yield null;
+                        var ax = AXIOMS.get(hds);
+                        Common.assertC(ax != null);
+                        yield ax;
+
                 }
             }
         };
     }
 
-    public Ast doAstUnsafe(String tree) {
-        return doAstUnsafe(Parser.ogar(tree));
+    public static Ast doAst(String tree) {
+        return doAst(Parser.ogar(tree));
     }
 
-    public Ast doAstUnsafe(TokenTree tree) {
-        return null;
+    public static Ast doAst(TokenTree tree) {
+        return new Aster().internalPrsA(tree);
     }
 
-    private void put(String s, Variable.Local variable) {
+    private Ast internalPrsA(TokenTree tree) {
+        return switch (tree) {
+            case TokenTree.Leaf leaf -> Ast.astVar(Objects.requireNonNull(vars.get(leaf.s())), leaf.getMetadata());
+            case TokenTree.Branch branch -> {
+                List<TokenTree> thisTrees = branch.trees();
+                var wholeMeta = branch.getMetadata();
+                Function<Integer, Ast> parseSubtree = i -> internalPrsA(thisTrees.get(i));
+                var hd = (TokenTree.Leaf) thisTrees.get(0);
+                String hds = hd.s();
+                switch (hds) {
+                    case "and":
+                        yield Ast.introAnd(parseSubtree.apply(1), parseSubtree.apply(2), wholeMeta);
+                    case "andElim": {
+                        Ast toDoElom = parseSubtree.apply(1);
+
+                        String vAs = ((TokenTree.Leaf) thisTrees.get(2)).s();
+                        Variable vA = Variable.local(vAs);
+                        String vBs = ((TokenTree.Leaf) thisTrees.get(3)).s();
+                        Variable.Local vB = Variable.local(vBs);
+                        Ast poElom;
+                        {
+                            var prevA = put(vAs, vA);
+                            var prevB = put(vBs, vB);
+                            poElom = parseSubtree.apply(4);
+                            put(vAs, prevA);
+                            put(vBs, prevB);
+                        }
+                        yield Ast.elimAnd(toDoElom, vA, vB, poElom, wholeMeta);
+                    }
+                    case "constant":
+                        Formula constant = this.internalPrsF(branch);
+                        Common.assertC(constant instanceof Formula.Constant);
+                        yield Ast.formulaX(constant, wholeMeta);
+
+
+                    default:
+                        if (AXIOMS.containsKey(hds)) {
+                            yield Ast.formulaX(internalPrsF(branch), wholeMeta);
+                        }
+
+                        throw new UnimplementedException();
+
+                }
+            }
+        };
+    }
+
+
+    private Variable put(String s, Variable variable) {
+        if (variable == null) {
+            return vars.remove(s);
+        }
         if (vars.containsKey(s)) {
             System.out.println("UWAGA NADPISUJĘ " + s);
         }
-        vars.put(s, variable);
+        return vars.put(s, variable);
 
     }
 }
