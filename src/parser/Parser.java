@@ -160,6 +160,7 @@ class PeekingCharIt implements Iterator<Character> {
         return peeked.isPresent() || iterator.hasNext();
     }
 
+    @SuppressWarnings("OptionalGetWithoutIsPresent")
     @Override
     public Character next() {
         return nextSafe().get();

@@ -49,8 +49,8 @@ public record Subst(Map<Variable, Formula> map)  {
             case Ast.ExtractWitness extractWitness -> new Ast.ExtractWitness(apply(extractWitness.sigma()),
                    checkVar( extractWitness.witness()), checkVar( extractWitness.proof()),apply(extractWitness.body()) );
             case Ast.FormulaX formulaX -> new Ast.FormulaX( apply(formulaX.f()));
-            case Variable.Local v -> {
-                Formula orDefault = map().getOrDefault(v, Formula.varRef(v));
+            case Ast.AstVar v -> {
+                Formula orDefault = map().getOrDefault( v.variable(), Formula.varRef(v.variable(),v.metadata()) /* edgy ? */);
 
                 yield new Ast.FormulaX(orDefault);
             } // eee

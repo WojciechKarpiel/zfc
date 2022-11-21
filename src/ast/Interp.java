@@ -85,10 +85,10 @@ public class Interp {
                 }
                 default -> formul.f();
             };
-            case Variable.Local local -> {
+            case Ast.AstVar astVar -> {
                     if (ALLOW_FREE_VARS) {
-                        var todo_this_replace = Formula.varRef(local);
-                        yield                    swiadkowie.getOrDefault(todo_this_replace, todo_this_replace);
+                        var vv =  Formula.varRef(astVar.variable());
+                        yield       swiadkowie.getOrDefault(vv, vv);
                     } else {
                             fail();
                         throw new ZfcException();}

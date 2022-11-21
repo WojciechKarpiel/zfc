@@ -17,24 +17,24 @@ class InterpTest {
     void andrzejuTosieWysype(){
         var x = varRef("x");
         var y = varRef("y");
-        var q = varRef("q");
+        var q = new Ast.AstVar (Variable.local("q"), Metadata.EMPTY);
 var orig =         Interp.ALLOW_FREE_VARS;
 var orig2 = Interp.DOPISUJ_SWIADKOW;
 
         Interp.DOPISUJ_SWIADKOW =false;
         Interp.ALLOW_FREE_VARS = true;
-        Function<VarRef, Ast> elo = ww ->
+        Function<Ast.AstVar, Ast> elo = ww ->
                 new Ast.ModusPonens(new Ast.FormulaX(
-                        implies(x,y)), ww.variable(), q.variable(),q.variable() );
+                        implies(x,y)), ww, q.variable(),q );
 
 
 
-        var okk=Interp.interp(elo.apply(x));
+        var okk=Interp.interp(elo.apply(new Ast.AstVar( x.variable(),Metadata.EMPTY)));
 
         assertEquals(y  ,okk);
 
 
-        assertThrows(ZfcException.class, () -> Interp.interp(elo.apply(y)));
+        assertThrows(ZfcException.class, () -> Interp.interp(elo.apply(new Ast.AstVar(y.variable(),Metadata.EMPTY))));
         Interp.ALLOW_FREE_VARS = orig;
 Interp.DOPISUJ_SWIADKOW = orig2;
     }
@@ -54,30 +54,30 @@ Interp.DOPISUJ_SWIADKOW = orig2;
                         /* tu chcę mieć (Eq p1 p2) */
                         // problem : skąd wynikanie, żeby zast
                         new Ast.Chain(impliesElo,
-                                new Ast.Apply(new Ast.Apply(new Ast.FormulaX(ZFC.EXTENSIONALITY), p1), p2),
+                                new Ast.Apply(new Ast.Apply(new Ast.FormulaX(ZFC.EXTENSIONALITY),new Ast.AstVar(p1,Metadata.EMPTY )), Ast.astVar(p2)),
 //                            impliesElo
-                                new Ast.ModusPonens(impliesElo,
+                                new Ast.ModusPonens(Ast.astVar(impliesElo),
                                         /*poprzednikWynikaniaAksjomatyEks*/
                                         //ForAll[var=x77, f=And[a=Implies[poprzednik=In[element=x77, set=x72], nastepnik=In[element=x77, set=x94]], b=Implies[poprzednik=In[element=x77, set=x94], nastepnik=In[element=x77, set=x72]]]]
                                         new Ast.IntroForall(jakisZbior,
                                                 new Ast.IntroAnd(
                                                         // Implies[poprzednik=In[element=x77, set=x72], nastepnik=In[element=x77, set=x94]]
                                                         new Ast.IntroImpl( Formula.appliedConstant( Formula.constant("elo", List.of(), in(varRef( jakisZbior),varRef(p1))),List.of()),
-                                                                implX, new Ast.ExFalsoQuodlibet(new Ast.Apply(p1P, jakisZbior), implX,
+                                                                implX, new Ast.ExFalsoQuodlibet(new Ast.Apply(Ast.astVar( p1P), Ast.astVar( jakisZbior)), Ast.astVar( implX),
                                                                 Formula.appliedConstant(
-                                                                Formula.constant("hehe", List.of(), in( varRef(jakisZbior),varRef(p2) /*2!*/)), List.of()) , qq, qq))
+                                                                Formula.constant("hehe", List.of(), in( varRef(jakisZbior),varRef(p2) /*2!*/)), List.of()) , qq,Ast.astVar(  qq)))
                                                         ,
                                                         // tu będzie to samo
                                                         new Ast.IntroImpl(Formula.appliedConstant( Formula.constant("elo2", List.of(), in(varRef(jakisZbior),varRef( p2))),
                                                                 List.of()),
-                                                                implX, new Ast.ExFalsoQuodlibet(new Ast.Apply(p2P, jakisZbior), implX,
+                                                                implX, new Ast.ExFalsoQuodlibet(new Ast.Apply(Ast.astVar(p2P), Ast.astVar(jakisZbior)), Ast.astVar(implX),
                                                                 Formula.appliedConstant(
                                                                 Formula.constant("hehe2", List.of(), in( varRef(jakisZbior),varRef( p1))),
-                                                                        List.of()), qq, qq))
+                                                                        List.of()), qq, Ast.astVar( qq)))
                                                 )
                                         )
 
-                                        , wyniczek, wyniczek)
+                                        , wyniczek, Ast.astVar(wyniczek))
                         )
                 ));
 
