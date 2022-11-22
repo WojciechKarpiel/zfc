@@ -2,6 +2,8 @@ package test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import ast.Formula;
+import ast.Interp;
 import ast.Metadata;
 import ast.Variable;
 import org.junit.jupiter.api.Test;
@@ -13,6 +15,78 @@ import parser.Span;
 import static ast.Formula.*;
 
 class AsterTest {
+
+    @Test
+    void noToEloPustyZbior(){
+         String wejscie = """
+                 (extractWitness
+                   pustego
+                   p1 p1P
+                   (extractWitness
+                     pustego
+                     p2 p2P
+                     (chain
+                       impliesElo
+                       (apply (apply ekstensionalności p1) p2)
+                       (modusPonens
+                         impliesElo
+                       
+                         (forall
+                           jakiśZbiór
+                           (and
+                             (implies
+                               (applyConstant (constant elo () (in jakiśZbiór p1)) ())
+                               implX
+                               (exFalsoQuodlibet
+                                 (apply p1P jakiśZbiór)
+                                 implX
+                                 (applyConstant (constant hehe () (in jakiśZbiór p2)) ())
+                                 q q
+                               )
+                             )
+    
+                             (implies
+                               (applyConstant (constant elo () (in jakiśZbiór p2)) ())
+                               implX
+                               (exFalsoQuodlibet
+                                 (apply p2P jakiśZbiór)
+                                 implX
+                                 (applyConstant (constant hehe () (in jakiśZbiór p1)) ())
+                                 q q
+                               )
+                             )
+                           )
+                         )
+                         wynik
+                         wynik
+                       )
+                     )
+                   )
+                 )""";
+
+         var tt  =Parser.ogar(wejscie);
+
+         var t= Aster.doAst(tt);
+
+        Formula interpd = Interp.interp(t);
+
+        String chcianyWynik = """
+                (forall x
+                  (implies
+                    (forall n (not (in n x)))
+                    (forall y
+                      (implies
+                        (forall n (not (in n y)))
+                        (= x y)))))
+                """;
+        var pusteRowneHip = Aster.parseFormula(Parser.ogar(chcianyWynik));
+
+        Formula formula = InterpTest.pusteZbiorySaRowne();
+        assertTrue( formula.equalsF(pusteRowneHip));
+        assertTrue( formula.equalsF(interpd));
+        assertTrue( pusteRowneHip.equalsF(interpd));
+
+    }
 
     @Test
     void parseFormula() {

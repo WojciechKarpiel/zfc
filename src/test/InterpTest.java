@@ -50,31 +50,31 @@ Interp.DOPISUJ_SWIADKOW = orig2;
         var jakisZbior = Variable.local("jakis");
         var implX = Variable.local("i");
         var qq = Variable.local("qq");
-        Ast kazdyZbiorPustyJestSobieRowny =  Ast.extractWitness( Ast.formulaX(ZFC.PUSTY()), p1, p1P,
-                 Ast.extractWitness(Ast.formulaX(ZFC.PUSTY()), p2, p2P,
+        Ast kazdyZbiorPustyJestSobieRowny = Ast.extractWitness(Ast.formulaX(ZFC.PUSTY()), p1, p1P,
+                Ast.extractWitness(Ast.formulaX(ZFC.PUSTY()), p2, p2P,
                         /* tu chcę mieć (Eq p1 p2) */
                         // problem : skąd wynikanie, żeby zast
-                         Ast.chain(impliesElo,
-                                Ast.apply(Ast.apply(Ast.formulaX(ZFC.EXTENSIONALITY),new Ast.AstVar(p1,Metadata.EMPTY )), Ast.astVar(p2)),
+                        Ast.chain(impliesElo,
+                                Ast.apply(Ast.apply(Ast.formulaX(ZFC.EXTENSIONALITY), new Ast.AstVar(p1, Metadata.EMPTY)), Ast.astVar(p2)),
 //                            impliesElo
-                                 Ast.modusPonens(Ast.astVar(impliesElo),
+                                Ast.modusPonens(Ast.astVar(impliesElo),
                                         /*poprzednikWynikaniaAksjomatyEks*/
                                         //ForAll[var=x77, f=And[a=Implies[poprzednik=In[element=x77, set=x72], nastepnik=In[element=x77, set=x94]], b=Implies[poprzednik=In[element=x77, set=x94], nastepnik=In[element=x77, set=x72]]]]
-                                         Ast.introForAll(jakisZbior,
-                                                 Ast.introAnd(
+                                        Ast.introForAll(jakisZbior,
+                                                Ast.introAnd(
                                                         // Implies[poprzednik=In[element=x77, set=x72], nastepnik=In[element=x77, set=x94]]
-                                                        Ast.introImpl( Formula.appliedConstant( Formula.constant("elo", List.of(), in(varRef( jakisZbior),varRef(p1))),List.of()),
-                                                                implX,  Ast.exFalsoQuodlibet(Ast.apply(Ast.astVar( p1P), Ast.astVar( jakisZbior)), Ast.astVar( implX),
-                                                                Formula.appliedConstant(
-                                                                Formula.constant("hehe", List.of(), in( varRef(jakisZbior),varRef(p2) /*2!*/)), List.of()) , qq,Ast.astVar(  qq)))
+                                                        Ast.introImpl(Formula.appliedConstant(Formula.constant("elo", List.of(), in(varRef(jakisZbior), varRef(p1))), List.of()),
+                                                                implX, Ast.exFalsoQuodlibet(Ast.apply(Ast.astVar(p1P), Ast.astVar(jakisZbior)), Ast.astVar(implX),
+                                                                        Formula.appliedConstant(
+                                                                                Formula.constant("hehe", List.of(), in(varRef(jakisZbior), varRef(p2) /*2!*/)), List.of()), qq, Ast.astVar(qq)))
                                                         ,
                                                         // tu będzie to samo
-                                                         Ast.introImpl(Formula.appliedConstant( Formula.constant("elo2", List.of(), in(varRef(jakisZbior),varRef( p2))),
-                                                                List.of()),
-                                                                implX,  Ast.exFalsoQuodlibet(Ast.apply(Ast.astVar(p2P), Ast.astVar(jakisZbior)), Ast.astVar(implX),
-                                                                Formula.appliedConstant(
-                                                                Formula.constant("hehe2", List.of(), in( varRef(jakisZbior),varRef( p1))),
-                                                                        List.of()), qq, Ast.astVar( qq)))
+                                                        Ast.introImpl(Formula.appliedConstant(Formula.constant("elo2", List.of(), in(varRef(jakisZbior), varRef(p2))),
+                                                                        List.of()),
+                                                                implX, Ast.exFalsoQuodlibet(Ast.apply(Ast.astVar(p2P), Ast.astVar(jakisZbior)), Ast.astVar(implX),
+                                                                        Formula.appliedConstant(
+                                                                                Formula.constant("hehe2", List.of(), in(varRef(jakisZbior), varRef(p1))),
+                                                                                List.of()), qq, Ast.astVar(qq)))
                                                 )
                                         )
 
@@ -85,24 +85,21 @@ Interp.DOPISUJ_SWIADKOW = orig2;
         Formula wynik = Interp.interp(kazdyZbiorPustyJestSobieRowny);
 
 
+        assertTrue(pusteZbiorySaRowne() .equalsF(wynik));
 
-Formula coChcialem;
-        {
-            Function<Variable,Formula> puste = q -> {
-                var n =Variable.local("___");
-               return forall(varRef( n), not(in( varRef( n),varRef( q))));
-            };
+    }
 
-            var x = Variable.local("_1");
-            var y = Variable.local("_2");
-            coChcialem= forall(varRef(x),  implies(puste.apply(x),  forall(varRef( y),
-                    implies(puste.apply(y), eql(varRef( x),varRef( y)))
-                    )));
-        }
+     public static Formula pusteZbiorySaRowne(){
+        Function<Variable,Formula> puste = q -> {
+            var n =Variable.local("___");
+            return forall(varRef( n), not(in( varRef( n),varRef( q))));
+        };
 
-        assertTrue(coChcialem.equalsF(wynik));
-
-
+        var x = Variable.local("_1");
+        var y = Variable.local("_2");
+        return forall(varRef(x),  implies(puste.apply(x),  forall(varRef( y),
+                implies(puste.apply(y), eql(varRef( x),varRef( y)))
+        )));
     }
 
     // TODO test co się wyala

@@ -1,5 +1,7 @@
 package parser;
 
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Consumer;
 
@@ -21,6 +23,37 @@ sealed interface Token permits Token.LPar, Token.RPar, Token.Symbol {
 
 public class Parser {
 
+    public static TokenTree ogar(InputStream s) {
+        Reader buffer;
+            Reader reader = new InputStreamReader(s, StandardCharsets.UTF_8);
+            buffer    = new BufferedReader(reader);
+        return ogar(new Iterator<Character>() {
+            public static boolean eof(Reader r) throws IOException {
+                r.mark(1);
+                int i = r.read();
+                r.reset();
+                return i < 0;
+            }
+            @Override
+            public boolean hasNext() {
+                try {
+                    var eof = eof(buffer);
+                    return !eof;
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            @Override
+            public Character next() {
+                try {
+                    return (char) buffer.read();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+    }
     public static TokenTree ogar(String s) {
         return ogar(new Iterator<>() {
             int i = 0;

@@ -10,7 +10,12 @@ public sealed interface Formula permits Formula.And, Formula.AppliedConstant, Fo
 
     Metadata metadata();
 
-    record VarRef(Variable variable, Metadata metadata) implements  Formula{}
+    record VarRef(Variable variable, Metadata metadata) implements  Formula{
+        @Override
+        public String toString() {
+            return variable.toString();
+        }
+    }
 
     static VarRef varRef() {
         return Formula.varRef("?");
