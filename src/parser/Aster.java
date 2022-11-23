@@ -4,6 +4,7 @@ import ast.*;
 import util.Common;
 import util.UnimplementedException;
 import util.ZfcException;
+import util.ZleExFalso;
 
 import java.rmi.dgc.Lease;
 import java.util.*;
@@ -39,7 +40,7 @@ public class Aster {
                     yield ax.get();
                 }
 
-             yield   Formula.varRef(Objects.requireNonNull(vars.get(leaf.s())), leaf.getMetadata());
+                yield Formula.varRef(Objects.requireNonNull(vars.get(leaf.s())), leaf.getMetadata());
             }
             case TokenTree.Branch branch -> {
                 List<TokenTree> thisTrees = branch.trees();
@@ -49,14 +50,13 @@ public class Aster {
                     case "~":
                     case "not":
                     case "nie":
-                        yield Formula.not(internalPrsF(thisTrees.get(1)) );
+                        yield Formula.not(internalPrsF(thisTrees.get(1)));
                     case "=":
                     case "eq":
-                    case "eql":
-                    {
-                        var a =internalPrsF(thisTrees.get(1));
-                        var b =internalPrsF(thisTrees.get(2));
-                     yield   Formula.eql(a,b, branch.getMetadata());
+                    case "eql": {
+                        var a = internalPrsF(thisTrees.get(1));
+                        var b = internalPrsF(thisTrees.get(2));
+                        yield Formula.eql(a, b, branch.getMetadata());
                     }
                     case "forall":
                     case "exists":
@@ -88,18 +88,24 @@ public class Aster {
                         Common.assertC(argst.size() == fi.arity());
                         var args = argst.stream().map(this::internalPrsF).toList();
                         yield Formula.appliedConstant(fi, args, branch.getMetadata());
-                    case "constant":
-                        var name = ((TokenTree.Leaf) thisTrees.get(1)).s();
-                        var vars = ((TokenTree.Branch) thisTrees.get(2)).trees()
-                                .stream().<Variable>map(vw -> {
-                                    var q = ((TokenTree.Leaf) vw);
-                                    return Variable.local(q.s());
-                                }).toList();
+                    case "constant": {
+                        TokenTree tt1 = thisTrees.get(1);
+                        if (!(tt1 instanceof TokenTree.Leaf)) {
+                            throw new ZfcException(String.format("Chciałem nazwę stałej, ale dostałem %s: %s",tt1.getMetadata(), tt1));
+                        } else {
+                            var name = ((TokenTree.Leaf) tt1).s();
+                            var vars = ((TokenTree.Branch) thisTrees.get(2)).trees()
+                                    .stream().<Variable>map(vw -> {
+                                        var q = ((TokenTree.Leaf) vw);
+                                        return Variable.local(q.s());
+                                    }).toList();
 
-                        var ff = internalPrsF(thisTrees.get(3));
-                        yield Formula.constant(name, vars, ff, branch.getMetadata());
+                            var ff = internalPrsF(thisTrees.get(3));
+                            yield Formula.constant(name, vars, ff, branch.getMetadata());
+                        }
+                    }
                     default:
-                        throw new UnimplementedException(hds +" nie znam w " + hd.getMetadata().getSpan());
+                        throw new UnimplementedException(hds + " nie znam w " + hd.getMetadata().getSpan());
 
                 }
             }
@@ -123,10 +129,10 @@ public class Aster {
                     yield Ast.formulaX(internalPrsF(leaf), leaf.getMetadata());
                 }
                 Variable obj = vars.get(leaf.s());
-                if (obj==null){
-                    throw  new ZfcException(leaf.s() + " nie znana zmienna w " + leaf.p());
+                if (obj == null) {
+                    throw new ZfcException(leaf.s() + " nie znana zmienna w " + leaf.p());
                 }
-                yield  Ast.astVar(Objects.requireNonNull(obj), leaf.getMetadata());
+                yield Ast.astVar(Objects.requireNonNull(obj), leaf.getMetadata());
             }
             case TokenTree.Branch branch -> {
                 List<TokenTree> thisTrees = branch.trees();
@@ -136,48 +142,51 @@ public class Aster {
                 var hd = (TokenTree.Leaf) thisTrees.get(0);
                 String hds = hd.s();
                 switch (hds) {
-                    case "modusPonens":
-                    {
+                    case "typed":
+                    case "chcę":
+                    case "chce":
+                    case "chcem": {
+                        var r = parseSubtree.apply(1);
+                        var c = parseFormula(thisTrees.get(2));
+                        yield Ast.chcem(r, (Formula.AppliedConstant) c, wholeMeta);
+                    }
+                    case "modusPonens": {
                         var w = parseSubtree.apply(1);
                         var p = parseSubtree.apply(2);
-                        var s = Variable.local(getLeaf.apply(3).s() );
-                        var prev=put(s);
-                        var b =parseSubtree.apply(4);
-                        put(s.getName(),prev);
-                        yield Ast.modusPonens(w,p,s,b, wholeMeta);
+                        var s = Variable.local(getLeaf.apply(3).s());
+                        var prev = put(s);
+                        var b = parseSubtree.apply(4);
+                        put(s.getName(), prev);
+                        yield Ast.modusPonens(w, p, s, b, wholeMeta);
                     }
-                    case "chain":
-                    {
+                    case "chain": {
 
-                        var v= Variable.local(getLeaf.apply(1).s());
-                            var e= parseSubtree.apply(2);
-                            var prev = put(v);
-                            var rest = parseSubtree.apply(3);
-                            put(v.getName(), prev);
+                        var v = Variable.local(getLeaf.apply(1).s());
+                        var e = parseSubtree.apply(2);
+                        var prev = put(v);
+                        var rest = parseSubtree.apply(3);
+                        put(v.getName(), prev);
 
-                        yield Ast.chain(v,e,rest, wholeMeta);
+                        yield Ast.chain(v, e, rest, wholeMeta);
                     }
                     case "app":
-                    case "apply":
-                    {
-                  yield      Ast.apply(parseSubtree.apply(1) ,parseSubtree.apply(2),wholeMeta);
+                    case "apply": {
+                        yield Ast.apply(parseSubtree.apply(1), parseSubtree.apply(2), wholeMeta);
                     }
                     case "forAll":
-                    case "forall":
-                    {
-    var  v = Variable.local(getLeaf.apply(1).s());
+                    case "forall": {
+                        var v = Variable.local(getLeaf.apply(1).s());
                         var prev = put(v);
-                        var r= Ast.introForAll(Ast.astVar(v,getLeaf.apply(1).getMetadata()), parseSubtree.apply(2), wholeMeta);
-                        put(v.getName(),prev);
+                        var r = Ast.introForAll(Ast.astVar(v, getLeaf.apply(1).getMetadata()), parseSubtree.apply(2), wholeMeta);
+                        put(v.getName(), prev);
                         yield r;
                     }
                     case "impl":
-                    case "implies":
-                    {
-                        var ap =(Formula.AppliedConstant)  internalPrsF(thisTrees.get(1));
+                    case "implies": {
+                        var ap = (Formula.AppliedConstant) internalPrsF(thisTrees.get(1));
                         var n = Variable.local(getLeaf.apply(2).s());
-                        var prev=put(n);
-    var r=                       Ast. introImpl(ap,n, parseSubtree.apply(3),wholeMeta);
+                        var prev = put(n);
+                        var r = Ast.introImpl(ap, n, parseSubtree.apply(3), wholeMeta);
                         put(n.getName(), prev);
                         yield r;
                     }
@@ -211,7 +220,7 @@ public class Aster {
                         Common.assertC(constant instanceof Formula.AppliedConstant);
                         yield Ast.formulaX(constant, wholeMeta);
                     }
-                    case "extractWitness":{
+                    case "extractWitness": {
                         //extractWitness(Ast sigma, Variable witness, Variable proof, Ast body, Metadata m)
                         var sigma = parseSubtree.apply(1);
                         var witness = Variable.local(getLeaf.apply(2).s());
@@ -224,30 +233,30 @@ public class Aster {
                             put(witness.getName(), prevA);
                             put(proof.getName(), prevB);
                         }
-                        yield Ast.extractWitness(sigma,witness,proof,body, wholeMeta);
+                        yield Ast.extractWitness(sigma, witness, proof, body, wholeMeta);
 
                     }
                     case "exFalsoQuodlibet":
-                    case "exFalsoSequiturQuodlibet":
-                    {
+                    case "exFalsoSequiturQuodlibet": {
                         // (Ast not, Ast aJednak, Formula.AppliedConstant cnstChciany, Variable v, Ast body)
-                        var not =parseSubtree.apply(1);
-                        var aJednak =parseSubtree.apply(2);
+                        var not = parseSubtree.apply(1);
+                        var aJednak = parseSubtree.apply(2);
                         var cnst = (Formula.AppliedConstant) internalPrsF(thisTrees.get(3));
                         var v = Variable.local(getLeaf.apply(4).s());
 
                         var prev = put(v);
-                        var  b = parseSubtree.apply(5);
-                        var r = Ast.exFalsoQuodlibet(not,aJednak,cnst,v, b,wholeMeta);
-                        put(v.getName(),prev);
+                        var b = parseSubtree.apply(5);
+                        var r = Ast.exFalsoQuodlibet(not, aJednak, cnst, v, b, wholeMeta);
+                        put(v.getName(), prev);
                         yield r;
 
                     }
-                    case "???": yield null;
+                    case "???":
+                        yield null;
                     default:
 
 
-                        throw new UnimplementedException( hds);
+                        throw new UnimplementedException(hds);
 
                 }
             }
@@ -255,9 +264,10 @@ public class Aster {
     }
 
 
-    private Variable put( Variable.Local variable) {
-        return put(variable.getName(),variable);
+    private Variable put(Variable.Local variable) {
+        return put(variable.getName(), variable);
     }
+
     private Variable put(String s, Variable variable) {
         if (variable == null) {
             return vars.remove(s);

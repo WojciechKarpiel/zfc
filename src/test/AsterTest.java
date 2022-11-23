@@ -17,9 +17,16 @@ import static ast.Formula.*;
 
 class AsterTest {
 
-    @Test
-    void noToEloPustyZbior(){
-         String wejscie = """
+    public static final String ROWNE_PUSTE_ZBIORY_CHCIANE="""
+                (forall x
+                  (implies
+                    (forall n (not (in n x)))
+                    (forall y
+                      (implies
+                        (forall n (not (in n y)))
+                        (= x y)))))
+                """;
+public static final String ROWNE_PUSTE_ZBIORY =    """
                  (extractWitness
                    pustego
                    p1 p1P
@@ -64,28 +71,26 @@ class AsterTest {
                      )
                    )
                  )""";
+    @Test
+    void noToEloPustyZbior(){
 
-         var tt  =Parser.ogar(wejscie);
+        var tt  =Parser.ogar(ROWNE_PUSTE_ZBIORY);
 
          var t= Aster.doAst(tt);
 
         Formula interpd = Interp.interp(t);
 
-        String chcianyWynik = """
-                (forall x
-                  (implies
-                    (forall n (not (in n x)))
-                    (forall y
-                      (implies
-                        (forall n (not (in n y)))
-                        (= x y)))))
-                """;
-        var pusteRowneHip = Aster.parseFormula(Parser.ogar(chcianyWynik));
+        var pusteRowneHip = Aster.parseFormula(Parser.ogar(ROWNE_PUSTE_ZBIORY_CHCIANE));
 
         Formula formula = InterpTest.pusteZbiorySaRowne();
         assertTrue( formula.equalsF(pusteRowneHip));
         assertTrue( formula.equalsF(interpd));
         assertTrue( pusteRowneHip.equalsF(interpd));
+
+        var zeSprawdzeniem = String.format( "(chcę %s (appliedConstant (constant _ () %s) ()) )", ROWNE_PUSTE_ZBIORY, ROWNE_PUSTE_ZBIORY_CHCIANE);
+        var jeszczeInne = Interp.interp( Aster.doAst( Parser.ogar(zeSprawdzeniem)));
+        assertTrue(jeszczeInne.equalsF(InterpTest.pusteZbiorySaRowne()));
+
         System.out .println(Wypisz.doNapisu(interpd) );
     }
 

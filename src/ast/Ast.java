@@ -1,9 +1,15 @@
 package ast;
 
 
-sealed public interface Ast permits Ast.Apply, Ast.Chain, Ast.ElimAnd, Ast.ExFalsoQuodlibet, Ast.ExtractWitness, Ast.FormulaX, Ast.IntroAnd, Ast.IntroForall, Ast.IntroImpl, Ast.ModusPonens, Ast.AstVar {
+sealed public interface Ast permits Ast.Apply, Ast.AstVar, Ast.Chain, Ast.Chcem, Ast.ElimAnd, Ast.ExFalsoQuodlibet, Ast.ExtractWitness, Ast.FormulaX, Ast.IntroAnd, Ast.IntroForall, Ast.IntroImpl, Ast.ModusPonens {
 
 Metadata metadata();
+
+    record Chcem(Ast rzecz, Formula.AppliedConstant co, Metadata metadata) implements Ast{}
+    static Chcem chcem(Ast rzecz, Formula.AppliedConstant co, Metadata metadata) {
+        return new Chcem(rzecz,co,metadata);
+    }
+
     record Apply(Ast fn, Ast arg, Metadata metadata) implements Ast{}
 
     static Apply apply(Ast fn, Ast arg, Metadata m) {
