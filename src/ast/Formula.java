@@ -17,14 +17,8 @@ public sealed interface Formula permits Formula.And, Formula.AppliedConstant, Fo
         }
     }
 
-    static VarRef varRef() {
-        return Formula.varRef("?");
-    }
     static VarRef varRef(String name){
-        return varRef(Variable.local(name));
-    }
-    static VarRef varRef(Variable v){
-        return varRef(v, Metadata.EMPTY);
+        return new VarRef(Variable.local(name), Metadata.EMPTY);
     }
 
     static VarRef varRef(Variable v, Metadata m){

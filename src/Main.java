@@ -5,6 +5,7 @@ import static ast.Formula.*;
 import parser.Aster;
 import parser.Parser;
 import parser.TokenTree;
+import pisarz.Wypisz;
 import util.Common;
 
 import static ast.Ast.*;
@@ -32,7 +33,7 @@ InputStream inS;
         var interpd = Interp.interp(ast);
 
         System.out.println(ast);
-        System.out.println(interpd);
+        System.out .println(Wypisz.doNapisu(interpd) );
     }
 
 }

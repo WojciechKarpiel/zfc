@@ -1,7 +1,6 @@
 package ast;
 
-import util.Common;
-import util.ZfcException;
+import util.*;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -51,7 +50,7 @@ public class Interp {
                 if (fn instanceof Formula.ForAll forAll) {
                     var f = forAll.f();
                     var v = forAll.var();
-                 yield    interpInternal( Ast.formulaX(new Subst(v, arg).apply(f)));
+                 yield    interpInternal( Ast.formulaX(new Subst(v, arg).apply(f),f.metadata()));
                 } else {
                     throw new ZfcException();
                 }
@@ -86,12 +85,16 @@ public class Interp {
                 default -> formul.f();
             };
             case Ast.AstVar astVar -> {
-                    if (ALLOW_FREE_VARS) {
-                        var vv =  Formula.varRef(astVar.variable());
+                var vv =  Formula.varRef(astVar.variable(),astVar.metadata());
+
+                    if (ALLOW_FREE_VARS || swiadkowie.containsKey(vv)) {
                         yield       swiadkowie.getOrDefault(vv, vv);
                     } else {
-                            fail();
-                        throw new ZfcException();}
+
+                        // a co jeśli jest pod Forall?
+                        throw new NieznanaZmienna(astVar);
+
+                    }
                     }
             case Ast.ModusPonens modusPonens -> {
                 var v =modusPonens.witness();
@@ -105,8 +108,7 @@ public class Interp {
                             System.out.println(implies.poprzednik());
                             System.out.println(int_pop);
                         } else {
-                            fail();
-                            throw new RuntimeException("implies.poprzednik().equalsF(interp(pop));");
+                            throw new ZlyPoprzednikWynikania(modusPonens, implies,int_pop);
                         }
                     }
                     // todo wywalić świadków? z interp(pop)?
@@ -132,7 +134,9 @@ public class Interp {
                var not = (Formula.Not) interpInternal(exFalsoQuodlibet.not());
 
                var aJednak= interpInternal( exFalsoQuodlibet.aJednak());
-               assertC(not.f().equalsF(aJednak));
+               if(! not.f().equalsF(aJednak)){
+                   throw  new ZleExFalso(exFalsoQuodlibet, not, aJednak);
+                }
 
                 var v= exFalsoQuodlibet.v();
                 var rest= exFalsoQuodlibet.body();
@@ -140,15 +144,19 @@ public class Interp {
     yield                 interpInternal(new Subst(v, c.formula()).apply(rest));
             }
             case Ast.IntroForall introForall -> {
+                //todo unhack
+                Formula.VarRef key = Formula.varRef(introForall.v().variable(), introForall.v().metadata());
+                assertC(!swiadkowie.containsKey(key));
+                 swiadkowie.put(key,key);
                 var body = interpInternal(introForall.body());
-                assertC(!swiadkowie.containsKey(Formula.varRef( introForall.v())));
+                swiadkowie.remove(key);
 //                Set<Variable> freeVars = body.findFreeVariables();
 //                assertC(
 //                         freeVars.equals(Set.of(introForall.variable())) ||
 //                         freeVars.isEmpty()
 //                 ) ;
 
-                 yield Formula.forall(Formula.varRef( introForall.v()), body);
+                 yield Formula.forall(key, body);
 
             }
             case Ast.IntroAnd introAnd -> {
@@ -165,7 +173,7 @@ public class Interp {
 //                Set<Variable> freeVariables = bdzie.findFreeVariables();
 //                Common.assertC(freeVariables.isEmpty());
                  // nie jestem pewien czy tu nie przemycam czegoś niedobrego
-            yield      Formula.implies(pop, bdzie);
+            yield      Formula.implies(pop, bdzie,ii.metadata());
 
             }
         };

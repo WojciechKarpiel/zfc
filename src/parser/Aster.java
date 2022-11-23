@@ -144,7 +144,7 @@ public class Aster {
                         var prev=put(s);
                         var b =parseSubtree.apply(4);
                         put(s.getName(),prev);
-                        yield Ast.modusPonens(w,p,s,b);
+                        yield Ast.modusPonens(w,p,s,b, wholeMeta);
                     }
                     case "chain":
                     {
@@ -167,7 +167,7 @@ public class Aster {
                     {
     var  v = Variable.local(getLeaf.apply(1).s());
                         var prev = put(v);
-                        var r= Ast.introForAll(v, parseSubtree.apply(2), wholeMeta);
+                        var r= Ast.introForAll(Ast.astVar(v,getLeaf.apply(1).getMetadata()), parseSubtree.apply(2), wholeMeta);
                         put(v.getName(),prev);
                         yield r;
                     }
@@ -224,7 +224,7 @@ public class Aster {
                             put(witness.getName(), prevA);
                             put(proof.getName(), prevB);
                         }
-                        yield Ast.extractWitness(sigma,witness,proof,body);
+                        yield Ast.extractWitness(sigma,witness,proof,body, wholeMeta);
 
                     }
                     case "exFalsoQuodlibet":

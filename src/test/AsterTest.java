@@ -11,6 +11,7 @@ import parser.Aster;
 import parser.Parser;
 import parser.Position;
 import parser.Span;
+import pisarz.Wypisz;
 
 import static ast.Formula.*;
 
@@ -85,7 +86,7 @@ class AsterTest {
         assertTrue( formula.equalsF(pusteRowneHip));
         assertTrue( formula.equalsF(interpd));
         assertTrue( pusteRowneHip.equalsF(interpd));
-
+        System.out .println(Wypisz.doNapisu(interpd) );
     }
 
     @Test

@@ -31,6 +31,11 @@ public final class Metadata {
        return this.getSpanOpt().equals(other.getSpanOpt());
     }
 
+    @Override
+    public String toString() {
+        return getSpanOpt().map(Record::toString).orElse("<brak>");
+    }
+
     // robie tak bo pyniam czy to nie zepsuje porównywania klas
     @Override
     public int hashCode() {
