@@ -3,15 +3,19 @@ package pisarz;
 import ast.Formula;
 import ast.Metadata;
 import ast.Variable;
-import util.Common;
 
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class Wypisz {
+    private final boolean krotko;
+
     private record Suffix(int i) {
     }
 
@@ -52,14 +56,19 @@ public class Wypisz {
     }
 
 
-    public Wypisz(Writer writer) {
+    public Wypisz(Writer writer, boolean krotko) {
         this.writer = writer;
+        this.krotko = krotko;
         this.takenVariables = new HashMap<>();
     }
 
     public static String doNapisu(Formula f) {
+        return doNapisu(f, false);
+    }
+
+    public static String doNapisu(Formula f, boolean krotko) {
         var v = new StringWriter();
-        new Wypisz(v).wypisz(f, 0);
+        new Wypisz(v, krotko).wypisz(f, 0);
         return v.toString();
     }
 
@@ -71,7 +80,8 @@ public class Wypisz {
 
 
     private void writeln(String s) {
-        write(s + "\n");
+        if (krotko) write(s + " ");
+        else write(s + "\n");
     }
 
     private void write(String s) {
@@ -90,7 +100,10 @@ public class Wypisz {
     }
 
     private void wypisz(Formula formula, int ident) {
-        addIdent(ident);
+        var isVar = formula instanceof Formula.VarRef;
+        if (krotko && !isVar) {
+            write(" (");
+        } else if (!krotko) addIdent(ident);
         switch (formula) {
             case Formula.And and -> {
                 writeln("and");
@@ -157,5 +170,6 @@ public class Wypisz {
             }
 
         }
+        if (krotko && !isVar) write(")");
     }
 }

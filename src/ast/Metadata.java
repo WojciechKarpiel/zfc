@@ -3,7 +3,6 @@ package ast;
 import parser.Position;
 import parser.Span;
 
-import javax.swing.*;
 import java.util.Objects;
 import java.util.Optional;
 

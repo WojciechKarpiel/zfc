@@ -3,6 +3,7 @@ package front;
 import ast.Ast;
 import ast.Formula;
 import ast.Interp;
+import pisarz.Wypisz;
 import util.ZfcException;
 import util.vlist.VList;
 
@@ -36,6 +37,7 @@ public class Drzwi {
     // bufferedreader bo ma `readline`
     public Ast repl(BufferedReader reader, int maxSteps) throws IOException {
         var step = 0;
+        System.out.println("Uszanowanko! Będziemy rozwiązywać: " + Wypisz.doNapisu(pierwotnyCel.f(), true));
         while (true) {
             if (maxSteps > 0 && step > maxSteps) {
                 throw new ZfcException("może nieskończona pętla w teście?");
@@ -47,25 +49,25 @@ public class Drzwi {
                 if (nc.isPresent()) {
                     obecnyCel = nc.get();
                 } else {
-                    System.out.println("Spełniłeś cel : " + pierwotnyCel.f());
+                    System.out.println("Wszystkie cele spełnione. Generuję rozwiązanie");
+//                    System.out.println(Wypisz.doNapisu(pierwotnyCel.f()));
                     Ast x = gm.recreateAst(pierwotnyCel.getHole());
-                    System.out.println("No to sprawdzam");
+                    System.out.println("No to sprawdzam rozwiązanie:");
                     System.out.println(x);
                     if (!Interp.interp(x).equalsF(pierwotnyCel.f())) {
                         throw new ZfcException("No jednak lipa!");
                     } else {
                         System.out.println("OK!");
                     }
-
                     return x;
                 }
             }
-            System.out.println("kontekst:");
-            System.out.println(obecnyCel.kontekst().toList());
-            System.out.println("cel");
-            System.out.println(obecnyCel.f());
+            System.out.println("Kontekst:");
+            obecnyCel.kontekst().forEach(q -> System.out.println(" " + q));
+            System.out.println("Cel na teraz:");
+            System.out.println(Wypisz.doNapisu(obecnyCel.f(), true));
             System.out.println("dawaj:");
-
+            System.out.print("$ ");
             var l = reader.readLine();
             if (l == null) {
                 System.out.println("olewam");

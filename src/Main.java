@@ -29,6 +29,7 @@ public class Main {
             System.out.println(Wypisz.doNapisu(interpd));
         } else {
             System.out.println("zapodaj cel");
+            System.out.print("$ ");
             Formula cel;
             try {
                 var r = new BufferedReader(new InputStreamReader(System.in));
