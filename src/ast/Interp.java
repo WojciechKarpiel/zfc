@@ -6,7 +6,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import static util.Common.*;
+import static util.Common.assertC;
+import static util.Common.fail;
 
 public class Interp {
     public static boolean ALLOW_MISMATCHED_IMPLICATION_LOL = false;
@@ -49,7 +50,7 @@ public class Interp {
     private Formula interpInternal(Ast ast) {
         return switch (ast) {
             case Ast.Chcem chcem -> {
-                Common.assertC(chcem.co().fi().isAtom());
+                assertC(chcem.co().fi().isAtom());
                 var chciane = chcem.co().fi().formula();
                 var prawdziwe = interpInternal(chcem.rzecz());
 
@@ -180,7 +181,7 @@ public class Interp {
             case Ast.IntroImpl ii -> {
                 var popqc = ((Formula.AppliedConstant) ii.pop());
                 var popq = popqc.fi();
-                Common.assertC(popq.isAtom());
+                assertC(popq.isAtom());
                 var pop = popq.formula();
                 var bdzie = interpInternal(new Subst(ii.v(), pop).apply(ii.nast()));
 //                Set<Variable> freeVariables = bdzie.findFreeVariables();
@@ -189,6 +190,7 @@ public class Interp {
                 yield Formula.implies(pop, bdzie, ii.metadata());
 
             }
+            case Ast.Hole hole -> throw new ZfcException();
         };
     }
 

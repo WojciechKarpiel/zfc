@@ -1,19 +1,43 @@
 package ast;
 
 
-sealed public interface Ast permits Ast.Apply, Ast.AstVar, Ast.Chain, Ast.Chcem, Ast.ElimAnd, Ast.ExFalsoQuodlibet, Ast.ExtractWitness, Ast.FormulaX, Ast.IntroAnd, Ast.IntroForall, Ast.IntroImpl, Ast.ModusPonens {
+sealed public interface Ast permits Ast.Apply, Ast.AstVar, Ast.Chain, Ast.Chcem, Ast.ElimAnd, Ast.ExFalsoQuodlibet, Ast.ExtractWitness, Ast.FormulaX, Ast.Hole, Ast.IntroAnd, Ast.IntroForall, Ast.IntroImpl, Ast.ModusPonens {
 
-Metadata metadata();
+    Metadata metadata();
 
-    record Chcem(Ast rzecz, Formula.AppliedConstant co, Metadata metadata) implements Ast{}
-    static Chcem chcem(Ast rzecz, Formula.AppliedConstant co, Metadata metadata) {
-        return new Chcem(rzecz,co,metadata);
+    public final class Hole implements Ast {
+        private final Metadata metadata;
+
+        public Hole(Metadata metadata) {
+            this.metadata = metadata;
+        }
+
+        @Override
+        public Metadata metadata() {
+            return metadata;
+        }
     }
 
-    record Apply(Ast fn, Ast arg, Metadata metadata) implements Ast{}
+    static Hole hole() {
+        return hole(Metadata.EMPTY);
+    }
+
+    static Hole hole(Metadata m) {
+        return new Hole(m);
+    }
+
+    record Chcem(Ast rzecz, Formula.AppliedConstant co, Metadata metadata) implements Ast {
+    }
+
+    static Chcem chcem(Ast rzecz, Formula.AppliedConstant co, Metadata metadata) {
+        return new Chcem(rzecz, co, metadata);
+    }
+
+    record Apply(Ast fn, Ast arg, Metadata metadata) implements Ast {
+    }
 
     static Apply apply(Ast fn, Ast arg, Metadata m) {
-        return new Apply(fn,arg,m);
+        return new Apply(fn, arg, m);
     }
 
 

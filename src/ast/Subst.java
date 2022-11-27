@@ -2,6 +2,7 @@ package ast;
 
 import util.Common;
 import util.UnimplementedException;
+import util.ZfcException;
 
 import java.util.Map;
 
@@ -72,7 +73,8 @@ public record Subst(Map<Variable, Formula> map)  {
             case Ast.IntroAnd introAnd -> Ast.introAnd(apply(introAnd.a()), apply(introAnd.b()), introAnd.metadata());
             case Ast.IntroForall introForall -> Ast.introForAll(  Ast.astVar(checkVar(introForall.v().variable()),introForall.v().metadata() ), apply(introForall.body()),introForall.metadata());
             case Ast.IntroImpl introImpl -> Ast.introImpl((Formula.AppliedConstant) apply(introImpl.pop()),checkVar(introImpl.v()), apply(introImpl.nast())   ,introImpl.metadata());
-            case Ast.Chcem chcem -> Ast.chcem(apply(chcem.rzecz()), chcem.co(),chcem.metadata() )  ;
+            case Ast.Chcem chcem -> Ast.chcem(apply(chcem.rzecz()), chcem.co(), chcem.metadata());
+            case Ast.Hole hole -> throw new ZfcException();
         };
     }
 

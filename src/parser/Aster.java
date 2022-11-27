@@ -1,13 +1,17 @@
 package parser;
 
-import ast.*;
+import ast.Ast;
+import ast.Formula;
+import ast.Variable;
+import ast.ZFC;
 import util.Common;
 import util.UnimplementedException;
 import util.ZfcException;
-import util.ZleExFalso;
 
-import java.rmi.dgc.Lease;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -124,6 +128,7 @@ public class Aster {
         return switch (tree) {
             case TokenTree.Leaf leaf -> {
                 if (leaf.s().equals("???")) yield null;
+                if (leaf.s().equals("_")) yield Ast.hole(leaf.getMetadata());
 
                 if (AXIOMS.containsKey(leaf.s())) {
                     yield Ast.formulaX(internalPrsF(leaf), leaf.getMetadata());
