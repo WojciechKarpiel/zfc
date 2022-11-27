@@ -23,8 +23,8 @@ public class GoalManager {
 
     public Ast recreateAst(Ast.Hole initHole) {
         return new Descent(ast -> {
-            if (ast instanceof Ast.Hole) {
-                Cel cel = cele.get(initHole);
+            if (ast instanceof Ast.Hole h) {
+                Cel cel = cele.get(h);
                 return cel.getWynik().orElseThrow(ZfcException::new);
             } else {
                 return ast;

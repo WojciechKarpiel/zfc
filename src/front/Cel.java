@@ -4,6 +4,8 @@ import ast.Ast;
 import ast.Formula;
 import ast.Metadata;
 import ast.Variable;
+import parser.Aster;
+import parser.Parser;
 import util.Common;
 import util.vlist.VList;
 
@@ -13,6 +15,9 @@ import java.util.Optional;
 import static ast.Formula.*;
 
 public class Cel {
+
+    private final Ast.Hole hole;
+
 
     record CtxElem(String name, Variable v, Formula tpeNullable) {
         public Optional<Formula> tpe() {
@@ -34,7 +39,7 @@ public class Cel {
     public Cel(GoalManager gm, Ast.Hole hole, Formula cel, VList<CtxElem> odziedziczone) {
         this.gm = gm;
         this.cel = cel;
-//        this.hole = hole;
+        this.hole = hole;
         this.kontekst = odziedziczone;
         this.wynik = null;
         gm.registerGoal(hole, this);
@@ -45,8 +50,38 @@ public class Cel {
     }
 
 
-    public void intro(String name) {
+    private Optional<CtxElem> znajdz(String s) {
+        for (CtxElem c : kontekst) {
+            if (c.name.equals(s)) return Optional.of(c);
+        }
+
+        return Optional.empty();
+    }
+
+    private void assertNoWynik() {
         Common.assertC(wynik == null);
+    }
+
+    public void bezposrednio(String l) {
+        var prs = Parser.ogar(l);
+        var qq = Aster.doAst(prs);
+        bezposrednio(qq);
+    }
+
+    public void bezposrednio(Ast ast) {
+        assertNoWynik();
+        this.wynik = ast;
+    }
+
+
+    public void wypelnijKontekstem(String n) {
+        assertNoWynik();
+        var elem = znajdz(n).orElseThrow();
+        wynik = Ast.astVar(elem.v(), Metadata.EMPTY);
+    }
+
+    public void intro(String name) {
+        assertNoWynik();
         switch (cel) {
             case ForAll fa -> {
 
@@ -65,7 +100,7 @@ public class Cel {
                 Ast.Hole hole1 = Ast.hole();
                 var g = new Cel(gm, hole1, impl.nastepnik(), zl);
                 AppliedConstant appliedConstant = appliedConstant(constant("?h", List.of(), impl.poprzednik(), Metadata.EMPTY), List.of(), Metadata.EMPTY);
-                this.wynik = Ast.introImpl(appliedConstant, hehehe, Ast.hole(), Metadata.EMPTY);
+                this.wynik = Ast.introImpl(appliedConstant, hehehe, hole1, Metadata.EMPTY);
             }
             default -> throw new IllegalStateException("Unexpected value: " + cel);
         }
@@ -73,5 +108,17 @@ public class Cel {
 
     public Optional<Ast> getWynik() {
         return Optional.ofNullable(wynik);
+    }
+
+    public Formula f() {
+        return cel;
+    }
+
+    public Ast.Hole getHole() {
+        return hole;
+    }
+
+    public VList<CtxElem> kontekst() {
+        return kontekst;
     }
 }

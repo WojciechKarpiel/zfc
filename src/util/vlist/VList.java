@@ -1,10 +1,28 @@
 package util.vlist;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
-public final class VList<T> {
+public final class VList<T> implements Iterable<T> {
+
+    @Override
+    public Iterator<T> iterator() {
+        return new Iterator<T>() {
+            int i_it = 0;
+
+            @Override
+            public boolean hasNext() {
+                return i_it <= maxIdx;
+            }
+
+            @Override
+            public T next() {
+                if (!hasNext()) {
+                    throw new NoSuchElementException();
+                }
+                return under.get(i_it++);
+            }
+        };
+    }
 
     public static sealed interface VListMatch permits VList.Empty, VList.HeadTail {
     }
@@ -16,7 +34,7 @@ public final class VList<T> {
 
 
     private ArrayList<T> under;
-    private int maxIdx;
+    private final int maxIdx;
 
 
     private VList(ArrayList<T> under, int maxIdx) {

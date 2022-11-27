@@ -15,7 +15,7 @@ class VListTest {
         var em2 = em1.cons(2);
         var em2a = em1.cons(997);
 
-        var em2p = em2.toOpt().get().tail().cons(2);
+        var em2p = em2.toOpt().orElseThrow().tail().cons(2);
         assertTrue(em2.__sameUnderlying(em1));
         assertTrue(em2.__sameUnderlying(em2p));
         assertFalse(em2a.__sameUnderlying(em1));
