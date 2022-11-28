@@ -1,5 +1,6 @@
 package ast;
 
+import parser.Aster;
 import util.*;
 
 import java.util.Collections;
@@ -32,6 +33,10 @@ public class Interp {
 
     public Map<Formula.VarRef, Formula> weźŚwiadków() {
         return Collections.unmodifiableMap(swiadkowie);
+    }
+
+    public static Formula interp(String ast) {
+        return interp(Aster.doAst(ast));
     }
 
     public static Formula interp(Ast ast) {

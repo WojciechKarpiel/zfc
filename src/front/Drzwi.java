@@ -4,6 +4,7 @@ import ast.Ast;
 import ast.Formula;
 import ast.Interp;
 import pisarz.Wypisz;
+import util.Common;
 import util.ZfcException;
 import util.vlist.VList;
 
@@ -14,7 +15,7 @@ import java.util.Optional;
 
 public class Drzwi {
 
-
+    public static boolean ADDITIONAL_CHECK = true;
     private final GoalManager gm;
     private final Cel pierwotnyCel;
     private Cel obecnyCel;
@@ -53,12 +54,22 @@ public class Drzwi {
 //                    System.out.println(Wypisz.doNapisu(pierwotnyCel.f()));
                     Ast x = gm.recreateAst(pierwotnyCel.getHole());
                     System.out.println("No to sprawdzam rozwiązanie:");
-                    System.out.println(x);
+                    System.out.println((x));
+                    String napisAst = Wypisz.doNapisu(x);
+                    System.out.println(napisAst);
+
                     if (!Interp.interp(x).equalsF(pierwotnyCel.f())) {
                         throw new ZfcException("No jednak lipa!");
                     } else {
                         System.out.println("OK!");
                     }
+
+                    if (ADDITIONAL_CHECK) {
+                        System.out.println("jeszcze posprawdzam kilka rzeczy");
+                        Common.assertC(Interp.interp((napisAst)).equalsF(pierwotnyCel.f()));
+                        System.out.println("git");
+                    }
+
                     return x;
                 }
             }
