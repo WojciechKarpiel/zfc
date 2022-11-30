@@ -87,18 +87,16 @@ public class Drzwi {
             if (l.startsWith("intro ")) {
                 var n = l.substring("intro ".length());
                 obecnyCel.intro(n);
-                continue;
             } else if (l.startsWith("exact ")) {
-
-
                 obecnyCel.bezposrednio(l.substring("exact ".length()));
-                continue;
             } else if (l.startsWith("assumption ")) {
                 var n = l.substring("assumption ".length());
                 obecnyCel.wypelnijKontekstem(n);
+            } else if (l.startsWith("exists")) {
+                var n = l.substring("ex ".length());
+
             } else {
                 System.out.println("co? " + l);
-                continue;
             }
 
         }

@@ -56,10 +56,10 @@ public class ZFC {
         args.add(b);
         args.addAll( ps);
         var ret =
-                forall(b, exists(a,
+                forall(b, exists(a, forall(x,
                         iff(in(x, a),
                                 and(in(x, b),
-                                        appliedConstant(fi, args)))));
+                                        appliedConstant(fi, args))))));
         for (int i = ps.size() - 1; i >= 0; i--) {
             ret = forall(ps.get(i), ret);
         }

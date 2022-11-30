@@ -67,14 +67,17 @@ public record Subst(Map<Variable, Formula> map)  {
                 if (map.containsKey(chain.v())) throw new RuntimeException(" !map.containsKey(chain.variable())");
                 yield Ast.chain(chain.v(), apply(chain.e()),apply(chain.rest()), chain.metadata());
             }
-            case Ast.ExFalsoQuodlibet exFalsoQuodlibet -> Ast.exFalsoQuodlibet(apply(exFalsoQuodlibet.not()),apply(exFalsoQuodlibet.aJednak()),
-                    (Formula.AppliedConstant)  apply(    exFalsoQuodlibet.cnstChciany()), checkVar(exFalsoQuodlibet.v()), apply(exFalsoQuodlibet.body()),
+            case Ast.ExFalsoQuodlibet exFalsoQuodlibet -> Ast.exFalsoQuodlibet(apply(exFalsoQuodlibet.not()), apply(exFalsoQuodlibet.aJednak()),
+                    (Formula.Constant) apply(exFalsoQuodlibet.cnstChciany()), checkVar(exFalsoQuodlibet.v()), apply(exFalsoQuodlibet.body()),
                     exFalsoQuodlibet.metadata());
             case Ast.IntroAnd introAnd -> Ast.introAnd(apply(introAnd.a()), apply(introAnd.b()), introAnd.metadata());
-            case Ast.IntroForall introForall -> Ast.introForAll(  Ast.astVar(checkVar(introForall.v().variable()),introForall.v().metadata() ), apply(introForall.body()),introForall.metadata());
-            case Ast.IntroImpl introImpl -> Ast.introImpl((Formula.AppliedConstant) apply(introImpl.pop()),checkVar(introImpl.v()), apply(introImpl.nast())   ,introImpl.metadata());
+            case Ast.IntroForall introForall ->
+                    Ast.introForAll(Ast.astVar(checkVar(introForall.v().variable()), introForall.v().metadata()), apply(introForall.body()), introForall.metadata());
+            case Ast.IntroImpl introImpl ->
+                    Ast.introImpl((Formula.Constant) apply(introImpl.pop()), checkVar(introImpl.v()), apply(introImpl.nast()), introImpl.metadata());
             case Ast.Chcem chcem -> Ast.chcem(apply(chcem.rzecz()), chcem.co(), chcem.metadata());
             case Ast.Hole hole -> throw new ZfcException();
+            case Ast.IntroExists introExists -> throw new UnimplementedException();
         };
     }
 

@@ -8,6 +8,14 @@ import pisarz.Wypisz;
 
 import java.io.*;
 
+/**
+ * Najpierw możliwość zdefiniowania <=>
+ * <p>
+ * Teraz zdefiniować operacje na zbiorach:
+ * sumę, różnicę, itd
+ * <p>
+ * suma -> aksjomat pary
+ */
 public class Main {
     public static void main(String[] args) throws IOException {
         if (args.length > 0) {

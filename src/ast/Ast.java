@@ -1,7 +1,7 @@
 package ast;
 
 
-sealed public interface Ast permits Ast.Apply, Ast.AstVar, Ast.Chain, Ast.Chcem, Ast.ElimAnd, Ast.ExFalsoQuodlibet, Ast.ExtractWitness, Ast.FormulaX, Ast.Hole, Ast.IntroAnd, Ast.IntroForall, Ast.IntroImpl, Ast.ModusPonens {
+sealed public interface Ast permits Ast.Apply, Ast.AstVar, Ast.Chain, Ast.Chcem, Ast.ElimAnd, Ast.ExFalsoQuodlibet, Ast.ExtractWitness, Ast.FormulaX, Ast.Hole, Ast.IntroAnd, Ast.IntroExists, Ast.IntroForall, Ast.IntroImpl, Ast.ModusPonens {
 
     Metadata metadata();
 
@@ -26,10 +26,10 @@ sealed public interface Ast permits Ast.Apply, Ast.AstVar, Ast.Chain, Ast.Chcem,
         return new Hole(m);
     }
 
-    record Chcem(Ast rzecz, Formula.AppliedConstant co, Metadata metadata) implements Ast {
+    record Chcem(Ast rzecz, Formula.Constant co, Metadata metadata) implements Ast {
     }
 
-    static Chcem chcem(Ast rzecz, Formula.AppliedConstant co, Metadata metadata) {
+    static Chcem chcem(Ast rzecz, Formula.Constant co, Metadata metadata) {
         return new Chcem(rzecz, co, metadata);
     }
 
@@ -66,33 +66,52 @@ sealed public interface Ast permits Ast.Apply, Ast.AstVar, Ast.Chain, Ast.Chcem,
         return new ElimAnd(and,a,b,body,metadata);
     }
 
-    record ExFalsoQuodlibet(Ast not, Ast aJednak, Formula.AppliedConstant cnstChciany, Variable v, Ast body, Metadata metadata) implements  Ast{}
+    record ExFalsoQuodlibet(Ast not, Ast aJednak, Formula.Constant cnstChciany, Variable v, Ast body,
+                            Metadata metadata) implements Ast {
+    }
 
-    static ExFalsoQuodlibet exFalsoQuodlibet(Ast not, Ast aJednak, Formula.AppliedConstant cnstChciany, Variable v, Ast body, Metadata metadata){
-            return  new ExFalsoQuodlibet(not,aJednak,cnstChciany,v,body,metadata);
+    static ExFalsoQuodlibet exFalsoQuodlibet(Ast not, Ast aJednak, Formula.Constant cnstChciany, Variable v, Ast body, Metadata metadata) {
+        return new ExFalsoQuodlibet(not, aJednak, cnstChciany, v, body, metadata);
     }
 
 
-    record IntroForall(Ast.AstVar v, Ast body, Metadata metadata) implements Ast{}
-    static IntroForall introForAll(Ast.AstVar v, Ast body, Metadata m){
-        return  new IntroForall(v,body,m);
-    }
-    record IntroAnd(Ast a, Ast b, Metadata metadata) implements Ast{}
-    static IntroAnd introAnd(Ast a, Ast b, Metadata m){
-        return  new IntroAnd(a,b,m);
-    }
-    record IntroImpl(Formula.AppliedConstant pop, Variable v, Ast nast, Metadata metadata) implements Ast{}
-    static IntroImpl introImpl(Formula.AppliedConstant p,Variable v, Ast n, Metadata m){
-        return  new IntroImpl(p,v,n,m);
+    record IntroForall(Ast.AstVar v, Ast body, Metadata metadata) implements Ast {
     }
 
-    record Chain(Variable v, Ast e, Ast rest, Metadata metadata) implements  Ast{}
-
-    static Chain chain(Variable v, Ast e, Ast rest, Metadata m){
-        return new Chain(v,e,rest,m);
+    static IntroForall introForAll(Ast.AstVar v, Ast body, Metadata m) {
+        return new IntroForall(v, body, m);
     }
 
-     record AstVar(Variable variable, Metadata metadata) implements Ast {
+    record IntroExists(Ast proof, Formula.Constant formula, Metadata metadata) implements Ast {
+
+        public IntroExists withMeta(Metadata m) {
+            if (m == metadata) return this;
+            else return new IntroExists(proof, formula, m);
+        }
+    }
+
+    record IntroAnd(Ast a, Ast b, Metadata metadata) implements Ast {
+    }
+
+    static IntroAnd introAnd(Ast a, Ast b, Metadata m) {
+        return new IntroAnd(a, b, m);
+    }
+
+    record IntroImpl(Formula.Constant pop, Variable v, Ast nast, Metadata metadata) implements Ast {
+    }
+
+    static IntroImpl introImpl(Formula.Constant p, Variable v, Ast n, Metadata m) {
+        return new IntroImpl(p, v, n, m);
+    }
+
+    record Chain(Variable v, Ast e, Ast rest, Metadata metadata) implements Ast {
+    }
+
+    static Chain chain(Variable v, Ast e, Ast rest, Metadata m) {
+        return new Chain(v, e, rest, m);
+    }
+
+    record AstVar(Variable variable, Metadata metadata) implements Ast {
     }
     static AstVar astVar(String s, Metadata m) {
         return Ast.astVar(Variable.local(s),m);

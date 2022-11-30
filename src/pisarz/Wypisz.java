@@ -4,6 +4,7 @@ import ast.Ast;
 import ast.Formula;
 import ast.Metadata;
 import ast.Variable;
+import util.UnimplementedException;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -300,6 +301,9 @@ public class Wypisz {
                     writes(get(modusPonens.witness()));
                     wypisz(modusPonens.body());
                 });
+            }
+            case IntroExists introExists -> {
+                throw new UnimplementedException();
             }
         }
 

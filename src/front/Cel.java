@@ -99,7 +99,7 @@ public class Cel {
                 ;
                 Ast.Hole hole1 = Ast.hole();
                 var g = new Cel(gm, hole1, impl.nastepnik(), zl);
-                AppliedConstant appliedConstant = appliedConstant(constant("?h" + hole1.hashCode(), List.of(), impl.poprzednik(), Metadata.EMPTY), List.of(), Metadata.EMPTY);
+                Constant appliedConstant = (constant("?h" + hole1.hashCode(), List.of(), impl.poprzednik(), Metadata.EMPTY));
                 this.wynik = Ast.introImpl(appliedConstant, hehehe, hole1, Metadata.EMPTY);
             }
             default -> throw new IllegalStateException("Unexpected value: " + cel);

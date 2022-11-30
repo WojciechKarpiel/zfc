@@ -2,23 +2,17 @@ package test;
 
 import ast.*;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.function.Executable;
 import parser.Aster;
-import parser.Span;
 import util.Common;
 import util.ZfcException;
 import util.ZlyPoprzednikWynikania;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.StringReader;
-import java.util.List;
 import java.util.function.Function;
 
-import static ast.Formula.in;
-import static org.junit.jupiter.api.Assertions.*;
+import static ast.Ast.formulaX;
 import static ast.Formula.*;
-import static ast.Ast.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class InterpTest {
 
@@ -29,7 +23,7 @@ class InterpTest {
                   (forall q
                     (modusPonens
                        (implies 
-                         (applyConstant (constant elo () x) ())
+                         (constant elo () x)
                          elo
                          elo
                        )

@@ -6,6 +6,7 @@ import util.*;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import static util.Common.assertC;
 import static util.Common.fail;
@@ -45,7 +46,10 @@ public class Interp {
         // todo co jak nie ma światków?
         if (DOPISUJ_SWIADKOW) {
 
-            Common.assertC(formula.findFreeVariables().isEmpty());
+            Set<Variable> freeVariables = formula.findFreeVariables();
+            if (!freeVariables.isEmpty()) {
+                throw new ZfcException("Nielegalne: " + freeVariables);
+            }
         } else {
             System.out.println("nie sprawdzam wolnych zmiennych");
         }
@@ -55,8 +59,8 @@ public class Interp {
     private Formula interpInternal(Ast ast) {
         return switch (ast) {
             case Ast.Chcem chcem -> {
-                assertC(chcem.co().fi().isAtom());
-                var chciane = chcem.co().fi().formula();
+                assertC(chcem.co().isAtom());
+                var chciane = chcem.co().formula();
                 var prawdziwe = interpInternal(chcem.rzecz());
 
                 if (!chciane.equalsF(prawdziwe)) {
@@ -91,7 +95,8 @@ public class Interp {
                 }
                 default -> throw new ZfcException("miala być sigma");
             };
-            case Ast.FormulaX formul -> switch (formul.f()) {
+            case Ast.FormulaX formul -> new DescentF(f -> switch (f) {
+                // to ogólnie + APPLIEDFORMULA NIE WOLNO UŻYTKOWNIKOWI!!!!!
                 case Formula.AppliedConstant ac -> {
                     var m = new HashMap<Variable, Formula>(ac.args().size());
                     for (int i = 0; i < ac.fi().arity(); i++) {
@@ -101,8 +106,9 @@ public class Interp {
 
                     yield s.apply(ac.fi().formula());
                 }
-                default -> formul.f();
-            };
+                default -> f;
+            }).apply(formul.f());
+
             case Ast.AstVar astVar -> {
                 var vv = Formula.varRef(astVar.variable(), astVar.metadata());
 
@@ -147,7 +153,7 @@ public class Interp {
                 yield interpInternal(new Subst(chain.v(), intp).apply(chain.rest()));
             }
             case Ast.ExFalsoQuodlibet exFalsoQuodlibet -> {
-                var c = exFalsoQuodlibet.cnstChciany().fi();
+                var c = exFalsoQuodlibet.cnstChciany();
                 assertC(c.isAtom());
 
                 var not = (Formula.Not) interpInternal(exFalsoQuodlibet.not());
@@ -178,14 +184,28 @@ public class Interp {
                 yield Formula.forall(key, body);
 
             }
+            case Ast.IntroExists ie -> {
+                var proof = interp(ie.proof());
+
+                var ief = ie.formula();
+                Common.assertC(ief.arity() == 1);
+
+                var iefv = ief.freeVariables().get(0);
+                var s = new Subst(iefv, interp(ie.proof()));
+                var qq = s.apply(ief.formula());
+                Common.assertC(qq.equalsF(proof));
+                // uwaga nachodzące zmienne!! trzebaby podmienić!
+                var varRef = Formula.varRef(iefv, Metadata.EMPTY);
+
+                yield Formula.exists(varRef, ie.formula().formula(), ie.metadata());
+            }
             case Ast.IntroAnd introAnd -> {
                 var a = interpInternal(introAnd.a());
                 var b = interpInternal(introAnd.b());
                 yield Formula.and(a, b);
             }
             case Ast.IntroImpl ii -> {
-                var popqc = ((Formula.AppliedConstant) ii.pop());
-                var popq = popqc.fi();
+                var popq = ((Formula.Constant) ii.pop());//.fi();
                 assertC(popq.isAtom());
                 var pop = popq.formula();
                 var bdzie = interpInternal(new Subst(ii.v(), pop).apply(ii.nast()));

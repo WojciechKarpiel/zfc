@@ -5,6 +5,7 @@ import ast.Formula;
 import ast.Variable;
 import ast.ZFC;
 import util.Common;
+import util.Para;
 import util.UnimplementedException;
 import util.ZfcException;
 
@@ -29,6 +30,10 @@ public class Aster {
             "pary", () -> ZFC.PARY,
             "pustego", ZFC::PUSTY
     );
+
+    public static Formula parseFormula(String s) {
+        return parseFormula(Parser.ogar(s));
+    }
 
     public static Formula parseFormula(TokenTree tokenTree) {
         return new Aster().internalPrsF(tokenTree);
@@ -62,6 +67,11 @@ public class Aster {
                         var b = internalPrsF(thisTrees.get(2));
                         yield Formula.eql(a, b, branch.getMetadata());
                     }
+                    case "iff": {
+                        var a = internalPrsF(thisTrees.get(1));
+                        var b = internalPrsF(thisTrees.get(2));
+                        yield Formula.iff(a, b, branch.getMetadata());
+                    }
                     case "forall":
                     case "exists":
                         var vf = ((TokenTree.Leaf) thisTrees.get(1));
@@ -94,19 +104,25 @@ public class Aster {
                         yield Formula.appliedConstant(fi, args, branch.getMetadata());
                     case "constant": {
                         TokenTree tt1 = thisTrees.get(1);
-                        if (!(tt1 instanceof TokenTree.Leaf)) {
-                            throw new ZfcException(String.format("Chciałem nazwę stałej, ale dostałem %s: %s",tt1.getMetadata(), tt1));
+                        String name;
+                        int delta;
+                        if ((tt1 instanceof TokenTree.Leaf)) {
+//                            throw new ZfcException(String.format("Chciałem nazwę stałej, ale dostałem %s: %s", tt1.getMetadata(), tt1));
+                            name = ((TokenTree.Leaf) tt1).s();
+                            delta = 0;
                         } else {
-                            var name = ((TokenTree.Leaf) tt1).s();
-                            var vars = ((TokenTree.Branch) thisTrees.get(2)).trees()
-                                    .stream().<Variable>map(vw -> {
-                                        var q = ((TokenTree.Leaf) vw);
-                                        return Variable.local(q.s());
-                                    }).toList();
-
-                            var ff = internalPrsF(thisTrees.get(3));
-                            yield Formula.constant(name, vars, ff, branch.getMetadata());
+                            name = "_";
+                            delta = -1;
                         }
+                        var vars = ((TokenTree.Branch) thisTrees.get(2 + delta)).trees()
+                                .stream().<Variable>map(vw -> {
+                                    var q = ((TokenTree.Leaf) vw);
+                                    return Variable.local(q.s());
+                                }).toList();
+                        var prvs = vars.stream().map(d -> new Para<>(d.getName(), this.put(d))).toList();
+                        var ff = internalPrsF(thisTrees.get(3 + delta));
+                        prvs.forEach(q -> this.put(q.a(), q.b()));
+                        yield Formula.constant(name, vars, ff, branch.getMetadata());
                     }
                     default:
                         throw new UnimplementedException(hds + " nie znam w " + hd.getMetadata().getSpan());
@@ -147,13 +163,19 @@ public class Aster {
                 var hd = (TokenTree.Leaf) thisTrees.get(0);
                 String hds = hd.s();
                 switch (hds) {
+                    case "podzbior":
+                    case "podzbiorow":
+                    case "podzbiorów": {
+                        var arg = (Formula.Constant) parseFormula(thisTrees.get(1));
+                        yield Ast.formulaX(ZFC.PODZBIOROW(arg), wholeMeta);
+                    }
                     case "typed":
                     case "chcę":
                     case "chce":
                     case "chcem": {
                         var r = parseSubtree.apply(1);
                         var c = parseFormula(thisTrees.get(2));
-                        yield Ast.chcem(r, (Formula.AppliedConstant) c, wholeMeta);
+                        yield Ast.chcem(r, (Formula.Constant) c, wholeMeta);
                     }
                     case "modusPonens": {
                         var w = parseSubtree.apply(1);
@@ -164,8 +186,9 @@ public class Aster {
                         put(s.getName(), prev);
                         yield Ast.modusPonens(w, p, s, b, wholeMeta);
                     }
-                    case "chain": {
-
+                    case "chain":
+                    case "let":
+                    case "niech": {
                         var v = Variable.local(getLeaf.apply(1).s());
                         var e = parseSubtree.apply(2);
                         var prev = put(v);
@@ -186,9 +209,15 @@ public class Aster {
                         put(v.getName(), prev);
                         yield r;
                     }
+                    case "ex":
+                    case "exists": {
+                        var proof = parseSubtree.apply(1);
+                        var c = internalPrsF(thisTrees.get(2));
+                        yield new Ast.IntroExists(proof, (Formula.Constant) c, wholeMeta);
+                    }
                     case "impl":
                     case "implies": {
-                        var ap = (Formula.AppliedConstant) internalPrsF(thisTrees.get(1));
+                        var ap = (Formula.Constant) internalPrsF(thisTrees.get(1));
                         var n = Variable.local(getLeaf.apply(2).s());
                         var prev = put(n);
                         var r = Ast.introImpl(ap, n, parseSubtree.apply(3), wholeMeta);
@@ -196,6 +225,7 @@ public class Aster {
                         yield r;
                     }
                     case "and":
+                    case "/\\":
                         yield Ast.introAnd(parseSubtree.apply(1), parseSubtree.apply(2), wholeMeta);
                     case "andElim": {
                         Ast toDoElom = parseSubtree.apply(1);
@@ -219,12 +249,15 @@ public class Aster {
                         Common.assertC(constant instanceof Formula.Constant);
                         yield Ast.formulaX(constant, wholeMeta);
                     }
+                    /*
+                    NIE WOLNO
                     case "applyConstant":
                     case "appliedConstant": {
                         Formula constant = this.internalPrsF(branch);
                         Common.assertC(constant instanceof Formula.AppliedConstant);
                         yield Ast.formulaX(constant, wholeMeta);
                     }
+                    */
                     case "extractWitness": {
                         //extractWitness(Ast sigma, Variable witness, Variable proof, Ast body, Metadata m)
                         var sigma = parseSubtree.apply(1);
@@ -246,7 +279,7 @@ public class Aster {
                         // (Ast not, Ast aJednak, Formula.AppliedConstant cnstChciany, Variable v, Ast body)
                         var not = parseSubtree.apply(1);
                         var aJednak = parseSubtree.apply(2);
-                        var cnst = (Formula.AppliedConstant) internalPrsF(thisTrees.get(3));
+                        var cnst = (Formula.Constant) internalPrsF(thisTrees.get(3));
                         var v = Variable.local(getLeaf.apply(4).s());
 
                         var prev = put(v);
@@ -256,20 +289,18 @@ public class Aster {
                         yield r;
 
                     }
-                    case "???":
-                        yield null;
                     default:
-
-
                         throw new UnimplementedException(hds);
 
                 }
             }
-        };
+        }
+
+                ;
     }
 
 
-    private Variable put(Variable.Local variable) {
+    private Variable put(Variable variable) {
         return put(variable.getName(), variable);
     }
 

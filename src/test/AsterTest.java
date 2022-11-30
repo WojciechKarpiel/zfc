@@ -1,11 +1,8 @@
 package test;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import ast.Formula;
 import ast.Interp;
 import ast.Metadata;
-import ast.Variable;
 import org.junit.jupiter.api.Test;
 import parser.Aster;
 import parser.Parser;
@@ -14,6 +11,8 @@ import parser.Span;
 import pisarz.Wypisz;
 
 import static ast.Formula.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AsterTest {
 
@@ -33,43 +32,43 @@ public static final String ROWNE_PUSTE_ZBIORY =    """
                    (extractWitness
                      pustego
                      p2 p2P
-                     (chain
-                       impliesElo
-                       (apply (apply ekstensionalności p1) p2)
-                       (modusPonens
-                         impliesElo
-                       
-                         (forall
-                           jakiśZbiór
-                           (and
-                             (implies
-                               (applyConstant (constant elo () (in jakiśZbiór p1)) ())
-                               implX
-                               (exFalsoQuodlibet
-                                 (apply p1P jakiśZbiór)
-                                 implX
-                                 (applyConstant (constant hehe () (in jakiśZbiór p2)) ())
-                                 q q
-                               )
-                             )
-    
-                             (implies
-                               (applyConstant (constant elo () (in jakiśZbiór p2)) ())
-                               implX
-                               (exFalsoQuodlibet
-                                 (apply p2P jakiśZbiór)
-                                 implX
-                                 (applyConstant (constant hehe () (in jakiśZbiór p1)) ())
-                                 q q
-                               )
-                             )
-                           )
-                         )
-                         wynik
-                         wynik
-                       )
-                     )
-                   )
+            (chain
+              impliesElo
+              (apply (apply ekstensionalności p1) p2)
+              (modusPonens
+                impliesElo
+              
+                (forall
+                  jakiśZbiór
+                  (and
+                    (implies
+                      (constant elo () (in jakiśZbiór p1))
+                      implX
+                      (exFalsoQuodlibet
+                        (apply p1P jakiśZbiór)
+                        implX
+                        (constant hehe () (in jakiśZbiór p2))
+                        q q
+                      )
+                    )
+            
+                    (implies
+                      (constant elo () (in jakiśZbiór p2))
+                      implX
+                      (exFalsoQuodlibet
+                        (apply p2P jakiśZbiór)
+                        implX
+                        (constant hehe () (in jakiśZbiór p1))
+                        q q
+                      )
+                    )
+                  )
+                )
+                wynik
+                wynik
+              )
+            )
+          )
                  )""";
     @Test
     void noToEloPustyZbior(){
@@ -87,8 +86,8 @@ public static final String ROWNE_PUSTE_ZBIORY =    """
         assertTrue( formula.equalsF(interpd));
         assertTrue( pusteRowneHip.equalsF(interpd));
 
-        var zeSprawdzeniem = String.format( "(chcę %s (appliedConstant (constant _ () %s) ()) )", ROWNE_PUSTE_ZBIORY, ROWNE_PUSTE_ZBIORY_CHCIANE);
-        var jeszczeInne = Interp.interp( Aster.doAst( Parser.ogar(zeSprawdzeniem)));
+        var zeSprawdzeniem = String.format("(chcę %s  (constant _ () %s) )", ROWNE_PUSTE_ZBIORY, ROWNE_PUSTE_ZBIORY_CHCIANE);
+        var jeszczeInne = Interp.interp(Aster.doAst(Parser.ogar(zeSprawdzeniem)));
         assertTrue(jeszczeInne.equalsF(InterpTest.pusteZbiorySaRowne()));
 
         System.out .println(Wypisz.doNapisu(interpd) );
