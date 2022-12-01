@@ -1,5 +1,6 @@
 package util;
 
+import ast.Formula;
 import ast.Metadata;
 import parser.Span;
 
@@ -7,6 +8,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.util.Optional;
 
 public final class Common {
     private Common() {
@@ -43,5 +45,25 @@ public final class Common {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+
+    public record Iff(Formula a, Formula b, Metadata m) {
+        public Iff(Formula a, Formula b) {
+            this(a, b, Metadata.EMPTY);
+        }
+    }
+
+    public static Optional<Iff> detectIff(Formula f) {
+        if (f instanceof Formula.And and) {
+            if (and.a() instanceof Formula.Implies ia) {
+                if (and.b() instanceof Formula.Implies ib) {
+                    if (ia.poprzednik().equalsF(ib.nastepnik()) &&
+                            ib.poprzednik().equalsF(ia.nastepnik())) {
+                        return Optional.of(new Iff(ia.poprzednik(), ia.nastepnik()));
+                    } else return Optional.empty();
+                } else return Optional.empty();
+            } else return Optional.empty();
+        } else return Optional.empty();
     }
 }

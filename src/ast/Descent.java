@@ -58,6 +58,9 @@ public class Descent {
                     Ast.introImpl(introImpl.pop(), introImpl.v(), descent(introImpl.nast()), introImpl.metadata());
             case Ast.ModusPonens modusPonens -> throw new UnimplementedException();
             case Ast.IntroExists introExists -> throw new UnimplementedException();
+            case Ast.AstPodzbiorow astPodzbiorow -> {
+                throw new UnimplementedException();
+            }
         };
         if (post != null) ast = post.apply(ast);
         return ast;

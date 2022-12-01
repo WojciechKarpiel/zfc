@@ -78,6 +78,7 @@ public record Subst(Map<Variable, Formula> map)  {
             case Ast.Chcem chcem -> Ast.chcem(apply(chcem.rzecz()), chcem.co(), chcem.metadata());
             case Ast.Hole hole -> throw new ZfcException();
             case Ast.IntroExists introExists -> throw new UnimplementedException();
+            case Ast.AstAxiom ax -> apply(Ast.formulaX(ax.intoFormula(), ax.metadata()));
         };
     }
 

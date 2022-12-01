@@ -1,7 +1,7 @@
 package ast;
 
 
-sealed public interface Ast permits Ast.Apply, Ast.AstVar, Ast.Chain, Ast.Chcem, Ast.ElimAnd, Ast.ExFalsoQuodlibet, Ast.ExtractWitness, Ast.FormulaX, Ast.Hole, Ast.IntroAnd, Ast.IntroExists, Ast.IntroForall, Ast.IntroImpl, Ast.ModusPonens {
+sealed public interface Ast permits Ast.ElimAnd, Ast.Apply, Ast.AstAxiom, Ast.AstVar, Ast.Chain, Ast.Chcem, Ast.ExFalsoQuodlibet, Ast.ExtractWitness, Ast.FormulaX, Ast.Hole, Ast.IntroAnd, Ast.IntroExists, Ast.IntroForall, Ast.IntroImpl, Ast.ModusPonens {
 
     Metadata metadata();
 
@@ -49,21 +49,43 @@ sealed public interface Ast permits Ast.Apply, Ast.AstVar, Ast.Chain, Ast.Chcem,
 
     record ModusPonens(Ast wynikanie,  Ast poprzednik, Variable witness,  Ast body, Metadata metadata  ) implements Ast{}
 
-    static ModusPonens modusPonens(Ast wynikanie,  Ast poprzednik, Variable witness,  Ast body, Metadata metadata  ){
-        return new ModusPonens(wynikanie,poprzednik,witness,body,metadata);
+    static ModusPonens modusPonens(Ast wynikanie, Ast poprzednik, Variable witness, Ast body, Metadata metadata) {
+        return new ModusPonens(wynikanie, poprzednik, witness, body, metadata);
     }
 
     // użytkownikowi wolno tylko aksjomaty tu wprowadzać
-    record FormulaX(Formula f, Metadata metadata) implements Ast{}
-    static FormulaX formulaX(Formula f,Metadata metadata){
-        return new FormulaX(f,metadata);
+    record FormulaX(Formula f, Metadata metadata) implements Ast {
+    }
+
+    static FormulaX formulaX(Formula f, Metadata metadata) {
+        return new FormulaX(f, metadata);
+    }
+
+    sealed interface AstAxiom extends Ast {
+        Formula intoFormula();
+
+        String getName();
+    }
+
+    record AstPodzbiorow(Formula.Constant f, Metadata metadata) implements AstAxiom {
+
+        @Override
+        public Formula intoFormula() {
+            return ZFC.PODZBIOROW(f);
+        }
+
+        @Override
+        public String getName() {
+            return "podzbiorów";
+        }
     }
 
 
-    record ElimAnd(Ast and, Variable a, Variable b, Ast body, Metadata metadata) implements Ast    {}
+    record ElimAnd(Ast and, Variable a, Variable b, Ast body, Metadata metadata) implements Ast {
+    }
 
-    static ElimAnd elimAnd(Ast and, Variable a, Variable b, Ast body, Metadata metadata){
-        return new ElimAnd(and,a,b,body,metadata);
+    static ElimAnd elimAnd(Ast and, Variable a, Variable b, Ast body, Metadata metadata) {
+        return new ElimAnd(and, a, b, body, metadata);
     }
 
     record ExFalsoQuodlibet(Ast not, Ast aJednak, Formula.Constant cnstChciany, Variable v, Ast body,

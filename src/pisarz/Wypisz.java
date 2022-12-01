@@ -4,6 +4,7 @@ import ast.Ast;
 import ast.Formula;
 import ast.Metadata;
 import ast.Variable;
+import util.Common;
 import util.UnimplementedException;
 
 import java.io.IOException;
@@ -139,9 +140,21 @@ public class Wypisz {
         } else if (!krotko) addIdent(ident);
         switch (formula) {
             case Formula.And and -> {
-                writeln("and");
-                wypisz(and.a(), ident + 1);
-                wypisz(and.b(), ident + 1);
+                Common.detectIff(formula)
+                        .ifPresentOrElse(
+                                iff -> {
+                                    writeln("iff");
+                                    wypisz(iff.a(), ident + 1);
+                                    wypisz(iff.b(), ident + 1);
+                                }
+                                , () -> {
+                                    writeln("and");
+                                    wypisz(and.a(), ident + 1);
+                                    wypisz(and.b(), ident + 1);
+
+                                }
+                        );
+
             }
             case Formula.AppliedConstant appliedConstant -> {
                 writeln("appliedConstant");
@@ -268,7 +281,15 @@ public class Wypisz {
                     wypisz(extractWitness.body());
                 });
             }
+            case AstPodzbiorow ap -> {
+                writes(ap.getName());
+                wypisz(ap.f());
+            }
             case FormulaX formulaX -> {
+//if (formulaX.ax().equals(Optional.of(ZFC.Axiom.A_PODZ))){
+//    writes("podzbiorow");
+//
+//}else
                 wypisz(formulaX.f());
             }
             case Hole hole -> {

@@ -188,12 +188,12 @@ public class Interp {
                 var proof = interp(ie.proof());
 
                 var ief = ie.formula();
-                Common.assertC(ief.arity() == 1);
+                assertC(ief.arity() == 1);
 
                 var iefv = ief.freeVariables().get(0);
                 var s = new Subst(iefv, interp(ie.proof()));
                 var qq = s.apply(ief.formula());
-                Common.assertC(qq.equalsF(proof));
+                assertC(qq.equalsF(proof));
                 // uwaga nachodzące zmienne!! trzebaby podmienić!
                 var varRef = Formula.varRef(iefv, Metadata.EMPTY);
 
@@ -216,6 +216,7 @@ public class Interp {
 
             }
             case Ast.Hole hole -> throw new ZfcException();
+            case Ast.AstAxiom ax -> interpInternal(Ast.formulaX(ax.intoFormula(), ax.metadata()));
         };
     }
 

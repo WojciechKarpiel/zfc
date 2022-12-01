@@ -167,7 +167,7 @@ public class Aster {
                     case "podzbiorow":
                     case "podzbiorów": {
                         var arg = (Formula.Constant) parseFormula(thisTrees.get(1));
-                        yield Ast.formulaX(ZFC.PODZBIOROW(arg), wholeMeta);
+                        yield new Ast.AstPodzbiorow((arg), wholeMeta);
                     }
                     case "typed":
                     case "chcę":
