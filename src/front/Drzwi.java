@@ -3,8 +3,11 @@ package front;
 import ast.Ast;
 import ast.Formula;
 import ast.Interp;
+import parser.Parser;
+import parser.TokenTree;
 import pisarz.Wypisz;
 import util.Common;
+import util.Ref;
 import util.ZfcException;
 import util.vlist.VList;
 
@@ -12,6 +15,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
 public class Drzwi {
 
@@ -58,8 +63,9 @@ public class Drzwi {
                     String napisAst = Wypisz.doNapisu(x);
                     System.out.println(napisAst);
 
-                    if (!Interp.interp(x).equalsF(pierwotnyCel.f())) {
-                        throw new ZfcException("No jednak lipa!");
+                    Formula interp = Interp.interp(x);
+                    if (!interp.equalsF(pierwotnyCel.f())) {
+                        throw new ZfcException("No jednak lipa, wyszło:\n" + Wypisz.doNapisu(interp, true));
                     } else {
                         System.out.println("OK!");
                     }
@@ -73,10 +79,19 @@ public class Drzwi {
                     return x;
                 }
             }
+            System.out.print("Obecny cel: " + obecnyCel.getHole().getId());
+            var jeszczeJakis = new Ref<>(false);
+            ;
+            niespelnione().filter(cc -> cc != obecnyCel).peek(q -> {
+                        jeszczeJakis.set(true);
+                        System.out.print("; pozostałe cele: ");
+                    })
+                    .forEach(x -> System.out.print(x.getHole().getId() + ", "));
+            System.out.println();
             System.out.println("Kontekst:");
             obecnyCel.kontekst().forEach(q -> System.out.println(" " + q));
-            System.out.println("Cel na teraz:");
-            System.out.println(Wypisz.doNapisu(obecnyCel.f(), true));
+            System.out.println("Cel na teraz (" + obecnyCel.getHole().getId() + "):");
+            System.out.println(/*obecnyCel.f() == null ? "evar " + obecnyCel.getHole().getId() :*/ Wypisz.doNapisu(obecnyCel.f(), true));
             System.out.println("dawaj:");
             System.out.print("$ ");
             var l = reader.readLine();
@@ -84,17 +99,37 @@ public class Drzwi {
                 System.out.println("olewam");
                 return null;
             }
+            var tt = (TokenTree.Branch) Parser.ogar("(" + l + ")");
+
+            var len = tt.trees().size();
+            if (len == 0) {
+                continue;
+            }
+
+            Function<Integer, TokenTree> getT = i -> (tt.trees().get(i));
+            Function<Integer, String> get = i -> ((TokenTree.Leaf) getT.apply(i)).s();
+
+            var go0 = get.apply(0);
             if (l.startsWith("intro ")) {
                 var n = l.substring("intro ".length());
                 obecnyCel.intro(n);
-            } else if (l.startsWith("exact ")) {
-                obecnyCel.bezposrednio(l.substring("exact ".length()));
             } else if (l.startsWith("assumption ")) {
                 var n = l.substring("assumption ".length());
                 obecnyCel.wypelnijKontekstem(n);
-            } else if (l.startsWith("exists")) {
-                var n = l.substring("ex ".length());
+            } else if (get.apply(0).equals("let") || get.apply(0).equals("niech") || get.apply(0).equals("chcem")) {
+                var q = (getT.apply(2));
+                obecnyCel.chain(get.apply(1), q);
+            } else if (get.apply(0).equals("exact") || get.apply(0).equals("bezpośrednio")) {
+                var strict = true;
+                if (len > 2) {
+                    String apply = get.apply(2);
+                    strict = apply.equalsIgnoreCase("true") || apply.equalsIgnoreCase("nonstrict");
+                }
+                obecnyCel.exact(getT.apply(1), strict);
 
+            } else if (go0.equals("cel")) {
+                var i = Integer.parseInt(get.apply(1));
+                obecnyCel = niespelnione().filter(q -> q.getHole().getId() == i).findFirst().orElseThrow();
             } else {
                 System.out.println("co? " + l);
             }
@@ -104,6 +139,10 @@ public class Drzwi {
 
     private Optional<Cel> nastepny() {
         return gm.getCele().values().stream().filter(c -> !c.spelniony()).findFirst();
+    }
+
+    private Stream<Cel> niespelnione() {
+        return gm.getCele().values().stream().filter(c -> !c.spelniony());//.toList();
     }
 
 }

@@ -20,7 +20,11 @@ public class Aster {
 
 
     private Aster() {
-        this.vars = new HashMap<>();
+        this(Map.of());
+    }
+
+    private Aster(Map<String, Variable> initVars) {
+        this.vars = new HashMap<>(initVars);
     }
 
     private final Map<String, Variable> vars;
@@ -36,8 +40,14 @@ public class Aster {
     }
 
     public static Formula parseFormula(TokenTree tokenTree) {
-        return new Aster().internalPrsF(tokenTree);
+        return parseFormula(tokenTree, Map.of());
     }
+
+    public static Formula parseFormula(TokenTree tokenTree, Map<String, Variable> ctx) {
+        Aster aster = new Aster(ctx);
+        return aster.internalPrsF(tokenTree);
+    }
+
 
     private Formula internalPrsF(TokenTree tree) {
         return switch (tree) {
@@ -137,7 +147,11 @@ public class Aster {
     }
 
     public static Ast doAst(TokenTree tree) {
-        return new Aster().internalPrsA(tree);
+        return doAst(tree, Map.of());
+    }
+
+    public static Ast doAst(TokenTree tree, Map<String, Variable> ctx) {
+        return new Aster(ctx).internalPrsA(tree);
     }
 
     private Ast internalPrsA(TokenTree tree) {

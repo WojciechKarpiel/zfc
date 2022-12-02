@@ -9,13 +9,7 @@ import pisarz.Wypisz;
 import java.io.*;
 
 /**
- * Najpierw możliwość zdefiniowania <=>
- * <p>
- * Teraz zdefiniować operacje na zbiorach:
- * sumę, git
- * cz. wspólną git
- * różnicę - bedzie na tą samą modłę co cz wspólna, meh
- * No to teraz ulepszyć drzwi, żeby różnicę zdefiniować drzwiami
+ * ulepszyć drzwi + zaczytać denfinicje
  */
 public class Main {
     public static void main(String[] args) throws IOException {

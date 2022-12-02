@@ -1,15 +1,15 @@
 package front;
 
-import ast.Ast;
-import ast.Formula;
-import ast.Metadata;
-import ast.Variable;
+import ast.*;
 import parser.Aster;
-import parser.Parser;
+import parser.TokenTree;
 import util.Common;
+import util.NieRowne;
 import util.vlist.VList;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static ast.Formula.*;
@@ -62,21 +62,12 @@ public class Cel {
         Common.assertC(wynik == null);
     }
 
-    public void bezposrednio(String l) {
-        var prs = Parser.ogar(l);
-        var qq = Aster.doAst(prs);
-        bezposrednio(qq);
-    }
-
-    public void bezposrednio(Ast ast) {
-        assertNoWynik();
-        this.wynik = ast;
-    }
-
 
     public void wypelnijKontekstem(String n) {
         assertNoWynik();
         var elem = znajdz(n).orElseThrow();
+
+        elem.tpe().map(t -> t.equalsF(cel)).ifPresent(Common::assertC);
         wynik = Ast.astVar(elem.v(), Metadata.EMPTY);
     }
 
@@ -105,6 +96,73 @@ public class Cel {
             default -> throw new IllegalStateException("Unexpected value: " + cel);
         }
     }
+
+    // może leniwa mapa?
+    private Map<VarRef, Formula> ctxToMap2() {
+        var r = new HashMap<VarRef, Formula>(kontekst.size());
+        for (CtxElem c : kontekst) {
+            VarRef other = varRef(c.v(), Metadata.EMPTY);
+
+            if (!r.containsKey(other)) {
+                r.put(other, c.tpe().orElse(other));
+            }
+        }
+        return r;
+
+    }
+
+    ;
+
+    private Map<String, Variable> ctxToMap() {
+        var r = new HashMap<String, Variable>(kontekst.size());
+        for (CtxElem c : kontekst) {
+            if (!r.containsKey(c.name)) {
+                r.put(c.name, c.v());
+            }
+        }
+        return r;
+    }
+
+    public void exact(TokenTree term, boolean strict) {
+        assertNoWynik();
+
+
+        Map<String, Variable> ctx = ctxToMap();
+
+        Ast wynik1 = Aster.doAst(term, ctx);
+        if (strict) {
+            Formula interp = Interp.interp(wynik1, ctxToMap2());
+
+            if (!interp.equalsF(cel)) {
+                throw new NieRowne(cel, interp);
+            }
+        }
+
+        this.wynik = wynik1;
+
+    }
+
+    @SuppressWarnings({"NonAsciiCharacters"})
+    public void chain(String zmienna, TokenTree takąchcęzmienną) {
+        assertNoWynik();
+        final Formula chciane;
+//        if (takąchcęzmienną.isPresent()) {
+        Map<String, Variable> ctx = ctxToMap();
+        chciane = Aster.parseFormula(takąchcęzmienną, ctx);
+//        } else chciane = null;
+        final var h1 = new Ast.Hole(Metadata.EMPTY);
+        var g = new Cel(gm, h1, chciane, kontekst);
+
+        var hRest = new Ast.Hole(Metadata.EMPTY);
+        var v = Variable.local(zmienna);
+        // todo chciane z wcześniej!
+        var nkrest = kontekst.cons(new CtxElem(zmienna, v, chciane));
+        var g2 = new Cel(gm, hRest, this.cel, nkrest);
+
+        this.wynik = Ast.chain(v, h1, hRest, Metadata.EMPTY);
+
+    }
+
 
     public Optional<Ast> getWynik() {
         return Optional.ofNullable(wynik);

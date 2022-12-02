@@ -59,7 +59,8 @@ public class Descent {
             case Ast.ModusPonens modusPonens -> throw new UnimplementedException();
             case Ast.IntroExists introExists -> throw new UnimplementedException();
             case Ast.AstPodzbiorow astPodzbiorow -> {
-                throw new UnimplementedException();
+                yield astPodzbiorow;
+//             new Ast.AstPodzbiorow(descent( astPodzbiorow.f() ),astPodzbiorow.metadata() );
             }
         };
         if (post != null) ast = post.apply(ast);

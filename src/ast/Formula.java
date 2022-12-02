@@ -106,11 +106,16 @@ public sealed interface Formula permits Formula.And, Formula.AppliedConstant, Fo
         }
     }
 
-    static Constant constant(String name, List<Variable> freeVariables, Formula formula){
-        return constant(name,freeVariables,formula,Metadata.EMPTY);
+    static Constant constant(List<Variable> freeVariables, Formula formula) {
+        return Formula.constant("_", freeVariables, formula);
     }
-    static Constant constant(String name, List<Variable> freeVariables, Formula formula, Metadata metadata){
-        return new Constant(name,freeVariables,formula,metadata);
+
+    static Constant constant(String name, List<Variable> freeVariables, Formula formula) {
+        return constant(name, freeVariables, formula, Metadata.EMPTY);
+    }
+
+    static Constant constant(String name, List<Variable> freeVariables, Formula formula, Metadata metadata) {
+        return new Constant(name, freeVariables, formula, metadata);
     }
 
     record AppliedConstant(Constant fi, List<Formula> args, Metadata metadata)

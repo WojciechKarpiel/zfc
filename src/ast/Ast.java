@@ -1,20 +1,43 @@
 package ast;
 
 
+import java.util.Objects;
+
 sealed public interface Ast permits Ast.ElimAnd, Ast.Apply, Ast.AstAxiom, Ast.AstVar, Ast.Chain, Ast.Chcem, Ast.ExFalsoQuodlibet, Ast.ExtractWitness, Ast.FormulaX, Ast.Hole, Ast.IntroAnd, Ast.IntroExists, Ast.IntroForall, Ast.IntroImpl, Ast.ModusPonens {
 
     Metadata metadata();
 
     public final class Hole implements Ast {
         private final Metadata metadata;
+        private final int id;
+        private static int idCounter = 0;
+
 
         public Hole(Metadata metadata) {
             this.metadata = metadata;
+            this.id = idCounter++;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Hole hole = (Hole) o;
+            return id == hole.id;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(id);
         }
 
         @Override
         public Metadata metadata() {
             return metadata;
+        }
+
+        public int getId() {
+            return id;
         }
     }
 

@@ -4,6 +4,10 @@ import java.util.*;
 
 public final class VList<T> implements Iterable<T> {
 
+    public int size() {
+        return maxIdx + 1;
+    }
+
     @Override
     public Iterator<T> iterator() {
         return new Iterator<T>() {
@@ -99,7 +103,6 @@ public final class VList<T> implements Iterable<T> {
     public static <T> VList<T> empty() {
         return (VList<T>) EMPTY;
     }
-
 
     @Override
     public int hashCode() {

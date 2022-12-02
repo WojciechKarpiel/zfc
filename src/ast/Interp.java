@@ -41,13 +41,18 @@ public class Interp {
     }
 
     public static Formula interp(Ast ast) {
+        return interp(ast, Map.of());
+    }
+
+    public static Formula interp(Ast ast, Map<Formula.VarRef, Formula> xd) {
         var i = new Interp();
+        i.swiadkowie.putAll(xd);
         var formula = i.interpInternal(ast);
         // todo co jak nie ma światków?
         if (DOPISUJ_SWIADKOW) {
 
             Set<Variable> freeVariables = formula.findFreeVariables();
-            if (!freeVariables.isEmpty()) {
+            if (!freeVariables.stream().allMatch(q -> xd.containsKey(Formula.varRef(q, Metadata.EMPTY)))) {
                 throw new ZfcException("Nielegalne: " + freeVariables);
             }
         } else {
